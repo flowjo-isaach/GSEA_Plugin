@@ -42,26 +42,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
            @Override
            public void keyReleased(KeyEvent event) {
                if(event.getKeyChar() == KeyEvent.VK_ENTER) {
-                    String analysis_field = (String)c_analysisList.getEditor().getItem();
-
-                    if(analysis_field != null && !analysis_field.isEmpty()) {
-                        current_analysis_name = (String) c_analysisList.getEditor().getItem();
-                        System.out.println("item count: ".concat(Integer.toString(c_analysisList.getItemCount())));
-                        System.out.println("Selected Index: ".concat(Integer.toString(current_analysis_index)));
-
-                        //if item selected is "add item..." add item
-                        if (current_analysis_index == c_analysisList.getItemCount() - 1) {
-                            c_analysisList.insertItemAt(current_analysis_name, 0);
-                            System.out.println("\"add item...\" selected");
-                        //else edit currently selected item
-                        }else {
-                            System.out.println("current index: ".concat(Integer.toString(current_analysis_index)));
-                            c_analysisList.removeItemAt(current_analysis_index);
-                            c_analysisList.insertItemAt(current_analysis_name, current_analysis_index);
-                            System.out.println("update current analysis");
-                        }
-                    }
-                   c_analysisList.setEditable(false);
+                    AddCurrentItem(c_analysisList);
                } else if (event.getKeyChar() == KeyEvent.VK_ESCAPE)
                    c_analysisList.setEditable(false);
            }
@@ -87,7 +68,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
                     c_analysisList.setEditable(true);
-                    c_analysisList.getEditor().selectAll();
+                    c_analysisList.grabFocus();
                 }
             }
         });
@@ -100,10 +81,13 @@ public class SettingsWindow extends JPanel implements ActionListener {
                     c_analysisList.setEditable(true);
                     c_analysisList.grabFocus();
                 }
-                if(c_analysisList.getSelectedIndex() != -1)
+                if(c_analysisList.getSelectedIndex() != -1) {
                     current_analysis_index = c_analysisList.getSelectedIndex();
+                    current_analysis_name = (String)c_analysisList.getSelectedItem();
+                    System.out.println("current index:: ".concat(Integer.toString(current_analysis_index)));
+                }
 
-                System.out.println("current index:: ".concat(Integer.toString(current_analysis_index)));
+//                System.out.println("current index:: ".concat(Integer.toString(current_analysis_index)));
                 //why does this prevent adding an item?
 //                else
 //                    c_analysisList.setEditable(false);
@@ -146,6 +130,9 @@ public class SettingsWindow extends JPanel implements ActionListener {
                     if (message.getResponse() == DELETE) {
                         c_analysisList.removeItemAt(current_analysis_index);
                         c_analysisList.setSelectedIndex(0);
+
+                        if(c_analysisList.getItemCount() != 1)
+                        c_analysisList.setEditable(false);
                     }
                 }
                 else
@@ -182,27 +169,8 @@ public class SettingsWindow extends JPanel implements ActionListener {
         JButton b_select_genesets = new JButton("Select Gene Sets");
         b_select_genesets.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e){
-//                UpdateLists();
-
-            String analysis_name = (String)c_analysisList.getSelectedItem();
-
-                if (analysis_name != null && !analysis_name.isEmpty()) {
-                    boolean update = true;
-                    current_analysis_name = analysis_name;
-
-                    ComboBoxModel<String> list = c_analysisList.getModel();
-                    for (int i = 0; update && i < list.getSize(); i++)
-                        if (list.getElementAt(i).equals(current_analysis_name))
-                            update = false;
-
-                    // add item to list if it doesn't already exist
-                    if (update || list.getSize() == 0)
-                        c_analysisList.addItem(current_analysis_name);
-
-                    c_analysisList.setEditable(false);
+                if(AddCurrentItem(c_analysisList))
                     GeneSelector();
-                } else
-                    new Display_Message("disclaimer", "Select/Create an analysis name first");
             }
         });
         constraints.gridx = 2;
@@ -452,6 +420,51 @@ public class SettingsWindow extends JPanel implements ActionListener {
         myWindow.pack();
         myWindow.setVisible(true);
         return true;
+    }
+
+    private boolean AddCurrentItem(JComboBox cbox) {
+        boolean retval = false;
+
+        String analysis_field = (String) cbox.getEditor().getItem();
+
+        //Ensure field is not empty
+        if (analysis_field != null && !analysis_field.isEmpty()) {
+            current_analysis_name = analysis_field;
+
+            //ensure the name in the text field is not equal to the "Add item..." option
+            if(!current_analysis_name.equals(cbox.getItemAt(cbox.getItemCount() - 1))) {
+                //if item selected is "add item..." add item
+                if (current_analysis_index == cbox.getItemCount() - 1) {
+                    cbox.insertItemAt(current_analysis_name, 0);
+                    cbox.setEditable(false);
+                    retval = true;
+                    System.out.println("add item was selected");
+                    //else rename current item
+                } else {
+                    System.out.println("other item selected");
+                    int count = 0;
+
+                    ComboBoxModel<String> list = cbox.getModel();
+                    for (int i = 0; count < 2 && i < list.getSize(); i++)
+                        if (list.getElementAt(i).equals(current_analysis_name))
+                            count++;
+
+                    if (count <= 1) {
+                        cbox.removeItemAt(current_analysis_index);
+                        cbox.insertItemAt(current_analysis_name, current_analysis_index);
+                        cbox.setEditable(false);
+                        retval = true;
+                    }
+                    //this code is not reachable for an unknown reaason. It appears JComboBox doesn't allow duplicate entries
+//                    else {
+//                        new Display_Message("Disclaimer", "\"".concat(current_analysis_name.concat("\" already exists")));
+//                    }
+                }
+            } else
+                new Display_Message("Disclaimer", "\"".concat(current_analysis_name.concat("\" is not valid")));
+        }
+
+        return retval;
     }
 
     private void UpdateSelectedGeneSets(JList<String> list) {
