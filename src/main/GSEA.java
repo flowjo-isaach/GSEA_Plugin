@@ -1,16 +1,8 @@
 package main;
 
-import com.flowjo.lib.parameters.ParameterSetMgrInterface;
-import com.treestar.lib.PluginHelper;
-import org.apache.http.client.methods.HttpPost;
-
-import java.io.IOException;
 import java.lang.String;
-import java.net.URISyntaxException;
-
 import java.io.File;
 import java.util.List;
-
 import javax.swing.*;
 
 import com.treestar.lib.core.ExportFileTypes;
@@ -21,13 +13,13 @@ import com.treestar.lib.xml.SElement;
 public class GSEA implements PopulationPluginInterface
 {
     @Override
-    public SElement getElement() { return new SElement(getClass().getSimpleName()); }
+    public SElement getElement() {return new SElement(getClass().getSimpleName());}
 
     @Override
-    public Icon getIcon() { return null; }
+    public Icon getIcon() {return null;}
 
     @Override
-    public String getName() { return null; }
+    public String getName() {return null;}
 
     @Override
     public List<String> getParameters() {return null;}

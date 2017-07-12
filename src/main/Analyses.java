@@ -28,8 +28,13 @@ public class Analyses {
     int getCount() {return getAnalyses().size();}
     List<Pair<String, List<String>>> getAllGeneSets() {return all_gene_sets;}
     String getCurrentAnalysisName() {
-        if(new_analysis_name == null && current_analysis == null) return null;
-        return (new_analysis_name != null) ? new_analysis_name : current_analysis.getAnalysisName();
+        if(current_analysis != null)
+            return current_analysis.getAnalysisName();
+
+        if(new_analysis_name != null)
+            return new_analysis_name;
+
+        return null;
     }
     void addAnalysis(AnalysisMember member) {analyses.add(member);}
     void addGeneSet(Pair<String, List<String>> pr) {all_gene_sets.add(pr);}

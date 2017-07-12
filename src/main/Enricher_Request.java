@@ -23,18 +23,12 @@ import java.util.StringJoiner;
  * Created by Isaac on 7/2/2017.
  */
 
-// other proteins to test
-//            'PHF14', 'RBM3', 'MSL1', 'PHF21A', 'ARL10', 'INSR', 'JADE2', 'P2RX7',
-//            'LINC00662', 'CCDC101', 'PPM1B', 'KANSL1L', 'CRYZL1', 'ANAPC16', 'TMCC1',
-//            'CDH8', 'RBM11', 'CNPY2', 'HSPA1L', 'CUL2', 'PLBD2', 'LARP7', 'TECPR2',
-//            'ZNF302', 'CUX1', 'MOB2', 'CYTH2', 'SEC22C', 'EIF4E3', 'ROBO2',
-//            'ADAMTS9-AS2', 'CXXC1', 'LINC01314', 'ATF7', 'ATP5F1'
 
 class Enricher_Request {
-    final private int GOOD_RESPONSE = 200;
-    private CloseableHttpClient httpClient = HttpClients.createDefault();
-    final private String enrichr_url = "http://amp.pharm.mssm.edu/Enrichr/addList";
-    private String resulting_url = "http://amp.pharm.mssm.edu/Enrichr/enrich?dataset=";
+    final private static int GOOD_RESPONSE = 200;
+    private static CloseableHttpClient httpClient = HttpClients.createDefault();
+    final private static String enrichr_url = "http://amp.pharm.mssm.edu/Enrichr/addList";
+    private static String resulting_url = "http://amp.pharm.mssm.edu/Enrichr/enrich?dataset=";
     private static StringJoiner genes;
 
     Enricher_Request() throws IOException, UrlUnavailableException {
@@ -80,12 +74,11 @@ class Enricher_Request {
     }
 
     void add_gene(String gene) {
-        if (gene.isEmpty())
-            new Display_Message("disclaimer", "Gene name is blank");
-        genes.add(gene);
+        if (gene != null && !gene.isEmpty())
+            genes.add(gene);
     }
 
-    void CheckURL (String url_string) throws IOException, UrlUnavailableException {
+    private void CheckURL(String url_string) throws IOException, UrlUnavailableException {
         //Check URL against regular expression
         final String url_regex_pattern = "\\b(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
         Pattern url_regex = Pattern.compile(url_regex_pattern);

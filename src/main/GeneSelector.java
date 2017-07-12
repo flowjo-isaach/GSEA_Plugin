@@ -179,7 +179,7 @@ public class GeneSelector {
         for(Pair<String, java.util.List<String>> geneset : analyses.getAllGeneSets()) {
             selected = false;
             if(analyses.getCurrentAnalysisMember() != null) {
-                for (Pair<String, java.util.List<String>> set : analyses.getCurrentAnalysisMember().getGene_sets()) {
+                for (Pair<String, java.util.List<String>> set : analyses.getCurrentAnalysisMember().getGeneSets()) {
                     if (geneset.getKey().equals(set.getKey()))
                         selected = true;
                 }

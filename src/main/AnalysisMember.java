@@ -13,7 +13,7 @@ class AnalysisMember {
     private List<Pair<String, List<String>>> gene_sets = new ArrayList<>();
 
     String getAnalysisName() {return AnalysisName;}
-    List<Pair<String, List<String>>> getGene_sets() {return gene_sets;}
+    List<Pair<String, List<String>>> getGeneSets() {return gene_sets;}
 
     void setAnalysisName(String analysisName) {AnalysisName = analysisName;}
     void addGeneSet(Pair<String, List<String>> gene_set) {gene_sets.add(gene_set);}

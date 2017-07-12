@@ -45,6 +45,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
     private static JButton b_delete;
     private static JButton b_submit;
     private static JButton b_close;
+    private static GridBagConstraints cons_main;
 
     SettingsWindow(SElement fcmlQueryElement) {
         f_main = new JFrame();
@@ -59,97 +60,93 @@ public class SettingsWindow extends JPanel implements ActionListener {
         p_main = new JPanel();
         p_main.setLayout(new GridBagLayout());
 
-        GridBagConstraints constraints = new GridBagConstraints();
+        cons_main = new GridBagConstraints();
         p_main.setBorder(BorderFactory.createEmptyBorder());
 
         l_analysis_name = new JLabel("Analysis name:");
-        constraints.insets = new Insets(20,15,15,15);
-        constraints.anchor = GridBagConstraints.LINE_END;
-        p_main.add(l_analysis_name, constraints);
+        cons_main.insets = new Insets(20,15,15,15);
+        cons_main.anchor = GridBagConstraints.LINE_END;
+        p_main.add(l_analysis_name, cons_main);
 
         c_analysisList = new JComboBox();
-
-        constraints.gridx = 1;
-        constraints.insets = new Insets(15,0,0,15);
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        constraints.gridwidth = 4;
-        p_main.add(c_analysisList, constraints);
+        cons_main.gridx = 1;
+        cons_main.insets = new Insets(15,0,0,15);
+        cons_main.fill = GridBagConstraints.HORIZONTAL;
+        cons_main.anchor = GridBagConstraints.FIRST_LINE_START;
+        cons_main.gridwidth = 4;
+        p_main.add(c_analysisList, cons_main);
 
         b_load = new JButton("Load");
         b_load.setPreferredSize(new Dimension(100,25));
-        constraints.gridx = 1;
-        constraints.gridy = 1;
-        constraints.insets = new Insets(5,0,15,15);
-        constraints.fill = GridBagConstraints.NONE;
-        constraints.anchor = GridBagConstraints.LINE_END;
-        constraints.gridwidth = 1;
-        p_main.add(b_load, constraints);
+        cons_main.gridx = 1;
+        cons_main.gridy = 1;
+        cons_main.insets = new Insets(5,0,15,15);
+        cons_main.fill = GridBagConstraints.NONE;
+        cons_main.anchor = GridBagConstraints.LINE_END;
+        cons_main.gridwidth = 1;
+        p_main.add(b_load, cons_main);
 
         b_rename = new JButton("Rename");
         b_rename.setPreferredSize(new Dimension(100,25));
-        constraints.gridx = 2;
-        constraints.gridy = 1;
-        constraints.insets = new Insets(5,0,15,15);
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.anchor = GridBagConstraints.CENTER;
-        constraints.gridwidth = 1;
-        p_main.add(b_rename, constraints);
+        cons_main.gridx = 2;
+        cons_main.gridy = 1;
+        cons_main.insets = new Insets(5,0,15,15);
+        cons_main.fill = GridBagConstraints.HORIZONTAL;
+        cons_main.anchor = GridBagConstraints.CENTER;
+        cons_main.gridwidth = 1;
+        p_main.add(b_rename, cons_main);
 
         b_delete = new JButton("Delete");
         b_delete.setPreferredSize(new Dimension(100,25));
-        constraints.gridx = 3;
-        p_main.add(b_delete, constraints);
+        cons_main.gridx = 3;
+        p_main.add(b_delete, cons_main);
 
         l_selected_gensets = new JLabel("Selected Gene Sets:");
-        constraints.gridx = 0;
-        constraints.gridy = 1;
-        constraints.insets = new Insets(15,15,0,15);
-        constraints.fill = GridBagConstraints.NONE;
-        constraints.anchor = GridBagConstraints.LINE_START;
-        p_main.add(l_selected_gensets, constraints);
+        cons_main.gridx = 0;
+        cons_main.gridy = 1;
+        cons_main.insets = new Insets(15,15,0,15);
+        cons_main.fill = GridBagConstraints.NONE;
+        cons_main.anchor = GridBagConstraints.LINE_START;
+        p_main.add(l_selected_gensets, cons_main);
 
         sp_main = new JScrollPane();
         sp_main.setPreferredSize(new Dimension(250,200));
         sp_main.setViewportView(selected_genesets);
         selected_genesets.setSelectionModel(new NoSelectionModel());
-        constraints.gridy = 2;
-        constraints.weightx = 1;
-        constraints.weighty = 1;
-        constraints.insets = new Insets(0,15,15,15);
-        constraints.fill = GridBagConstraints.BOTH;
-        constraints.anchor = GridBagConstraints.LINE_END;
-        constraints.gridwidth = 2;
-        p_main.add(sp_main, constraints);
+        cons_main.gridy = 2;
+        cons_main.weightx = 1;
+        cons_main.weighty = 1;
+        cons_main.insets = new Insets(0,15,15,15);
+        cons_main.fill = GridBagConstraints.BOTH;
+        cons_main.anchor = GridBagConstraints.LINE_END;
+        cons_main.gridwidth = 2;
+        p_main.add(sp_main, cons_main);
 
         b_select_genesets = new JButton("Select Gene Sets");
-
-        constraints.gridx = 2;
-        constraints.gridy = 2;
-        constraints.weightx = 0;
-        constraints.weighty = 0;
-        constraints.ipadx = 20;
-        constraints.insets = new Insets(0,0,0,15);
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.anchor = GridBagConstraints.PAGE_START;
-        constraints.gridwidth = 3;
-        p_main.add(b_select_genesets, constraints);
+        cons_main.gridx = 2;
+        cons_main.gridy = 2;
+        cons_main.weightx = 0;
+        cons_main.weighty = 0;
+        cons_main.ipadx = 20;
+        cons_main.insets = new Insets(0,0,0,15);
+        cons_main.fill = GridBagConstraints.HORIZONTAL;
+        cons_main.anchor = GridBagConstraints.PAGE_START;
+        cons_main.gridwidth = 3;
+        p_main.add(b_select_genesets, cons_main);
 
         b_close = new JButton("Close");
-        constraints.gridx = 2;
-        constraints.gridy = 2;
-        constraints.ipadx = 0;
-        constraints.insets = new Insets(0,0,15,15);
-        constraints.anchor = GridBagConstraints.LAST_LINE_END;
-        constraints.gridwidth = 1;
-        p_main.add(b_close, constraints);
+        cons_main.ipadx = 0;
+        cons_main.insets = new Insets(0,0,15,15);
+        cons_main.anchor = GridBagConstraints.LAST_LINE_END;
+        cons_main.gridwidth = 1;
+        p_main.add(b_close, cons_main);
 
         b_submit = new JButton("Submit");
         b_submit.setPreferredSize(new Dimension(100,25));
-        constraints.gridx = 3;
-        constraints.gridwidth = 2;
-        constraints.insets = new Insets(0,0,15,15);
-        p_main.add(b_submit, constraints);
+        cons_main.gridx = 3;
+        cons_main.gridwidth = 2;
+        cons_main.insets = new Insets(0,0,15,15);
+        p_main.add(b_submit, cons_main);
 
         UpdateComboList();
         SetupListeners();
@@ -208,13 +205,13 @@ public class SettingsWindow extends JPanel implements ActionListener {
         AnalysisMember analysis = new AnalysisMember();
         analysis.setAnalysisName(analyses.getCurrentAnalysisName());
 
-        Iterator gene_it = analyses.getAllGeneSets().iterator();
+        List<Pair<String, List<String>>> all_genesets = analyses.getAllGeneSets();
         ListModel<String> model = list.getModel();
-        while(gene_it.hasNext()) {
-            Pair<String, List<String>> pr = (javafx.util.Pair)gene_it.next();
+
+        for(Pair<String, List<String>> gene_set : all_genesets) {
             for(int i = 0; i < model.getSize(); i++)
-                if(model.getElementAt(i).equals(pr.getKey()))
-                    analysis.addGeneSet(pr);
+                if(model.getElementAt(i).equals(gene_set.getKey()))
+                    analysis.addGeneSet(gene_set);
         }
 
         if(!analyses.doesExist(analysis) )
@@ -260,9 +257,8 @@ public class SettingsWindow extends JPanel implements ActionListener {
         FileNameExtensionFilter filter = new FileNameExtensionFilter( "CSV files", "csv");
         chooser.setFileFilter(filter);
         chooser.setCurrentDirectory(new File("./plugins/GSEA/"));
-        int retval = chooser.showOpenDialog(getParent());
 
-        if(retval == JFileChooser.APPROVE_OPTION){
+        if(chooser.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION){
             Pattern analysis_regex = Pattern.compile("\\[(.+)\\]");
             Pattern geneset_regex = Pattern.compile("\\((.+)\\)");
             try {
@@ -301,13 +297,13 @@ public class SettingsWindow extends JPanel implements ActionListener {
         try {
             File dir = new File("./plugins/GSEA/");
 
-            if(dir.exists())
+            if(!dir.exists())
                 dir.mkdirs();
 
             writer = new FileWriter("./plugins/GSEA/" + filename + ".csv");
             for(AnalysisMember analysis: analyses.getAnalyses()) {
                 writer.append("[".concat(analysis.getAnalysisName()).concat("]\n"));
-                for(Pair geneset: analysis.getGene_sets()) {
+                for(Pair geneset: analysis.getGeneSets()) {
                     writer.append("(".concat((String)geneset.getKey()).concat(")\n"));
                     for(String gene: (List<String>)geneset.getValue())
                         writer.append(gene.concat("\n"));
@@ -379,15 +375,25 @@ public class SettingsWindow extends JPanel implements ActionListener {
         c_analysisList.addActionListener(e -> {
             //if "Add item..." is selected
             if(c_analysisList.getSelectedIndex() == c_analysisList.getItemCount() - 1) {
+                listModel.clear();
                 c_analysisList.setEditable(true);
                 c_analysisList.grabFocus();
             }
+
+            //Check if valid item is selected
             if(c_analysisList.getSelectedIndex() != -1) {
                 current_analysis_index = c_analysisList.getSelectedIndex();
 
                 //ensure the current index isn't "Add Item..."
-                if(current_analysis_index != c_analysisList.getItemCount() - 1)
-                    analyses.setCurrentAnalysis((String)c_analysisList.getSelectedItem());
+                if(current_analysis_index != c_analysisList.getItemCount() - 1) {
+                    analyses.setCurrentAnalysis((String) c_analysisList.getSelectedItem());
+                    System.out.println((String) c_analysisList.getSelectedItem());
+                    AnalysisMember mem = analyses.getCurrentAnalysisMember();
+                    listModel.clear();
+
+                    for(Pair<String, List<String>> gene_set : mem.getGeneSets())
+                        listModel.add(gene_set.getKey());
+                }
             }
         });
 
@@ -445,14 +451,14 @@ public class SettingsWindow extends JPanel implements ActionListener {
         });
 
         b_submit.addActionListener(e -> {
-            Iterator gene_it = analyses.getAllGeneSets().iterator();
+            List<Pair<String, List<String>>> all_genesets = analyses.getAllGeneSets();
             List<String> all_genes = new ArrayList<>();
-            ListModel<String> model = selected_genesets.getModel();
-            while(gene_it.hasNext()) {
-                Pair<String, List<String>> pr = (Pair)gene_it.next();
-                for(int i = 0; i < model.getSize(); i++) {
-                    if(model.getElementAt(i).equals(pr.getKey()))
-                        all_genes = Stream.concat(all_genes.stream(), pr.getValue().stream()).collect(Collectors.toList());
+//            ListModel<String> model = selected_genesets.getModel();
+
+            for(Pair<String, List<String>> geneset: all_genesets) {
+                for(int i = 0; i < listModel.getSize(); i++) {
+                    if(listModel.getElementAt(i).equals(geneset.getKey()))
+                        all_genes = Stream.concat(all_genes.stream(), geneset.getValue().stream()).collect(Collectors.toList());
                 }
             }
             SendEnrichrRequest(all_genes);
