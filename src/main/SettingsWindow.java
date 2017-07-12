@@ -189,6 +189,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
                     if (count <= 1) {
                         cbox.removeItemAt(current_analysis_index);
                         cbox.insertItemAt(new_analysis_name, current_analysis_index);
+                        analyses.renameSelectedAnalysis(new_analysis_name);
                         cbox.setEditable(false);
                         retval = true;
                     }
@@ -259,6 +260,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
     }
 
     private void LoadCSV() {
+        analyses.clear();
         JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter( "CSV files", "csv");
         chooser.setFileFilter(filter);
@@ -353,9 +355,9 @@ public class SettingsWindow extends JPanel implements ActionListener {
         c_analysisList.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent event) {
-                if(event.getKeyChar() == KeyEvent.VK_ENTER) {
+                if(event.getKeyChar() == KeyEvent.VK_ENTER)
                     AddCurrentItem(c_analysisList);
-                } else if (event.getKeyChar() == KeyEvent.VK_ESCAPE)
+                else if (event.getKeyChar() == KeyEvent.VK_ESCAPE)
                     c_analysisList.setEditable(false);
             }
         });
@@ -424,6 +426,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
                 Display_Message message = new Display_Message("prompt", "Are you sure you would like to delete: ".concat((String)c_analysisList.getItemAt(current_analysis_index)));
                 if (message.getResponse() == JOptionPane.OK_OPTION) {
                     pending_changes = true;
+
                     c_analysisList.removeItemAt(current_analysis_index);
                     c_analysisList.setSelectedIndex(0);
                     analyses.removeAnalysis(analyses.getCurrentAnalysisName());
@@ -444,9 +447,8 @@ public class SettingsWindow extends JPanel implements ActionListener {
                     FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV files", "csv");
                     chooser.setFileFilter(filter);
                     chooser.setCurrentDirectory(new File("./plugins/GSEA/"));
-                    int retval = chooser.showSaveDialog(getParent());
 
-                    if (retval == JFileChooser.APPROVE_OPTION) {
+                    if (chooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
                         String filename = chooser.getSelectedFile().getName();
                         filename = FilenameUtils.removeExtension(filename);
                         SaveCSV(filename);

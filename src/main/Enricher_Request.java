@@ -32,7 +32,12 @@ class Enricher_Request {
     private static StringJoiner genes;
 
     Enricher_Request() throws IOException, UrlUnavailableException {
-        CheckURL(enrichr_url);
+        try {
+            CheckURL(enrichr_url);
+        }
+        catch (Exception e) {
+            new Display_Message("Error", e.getMessage());
+        }
         genes = new StringJoiner("\n");
     }
 
@@ -51,24 +56,24 @@ class Enricher_Request {
     }
 
     boolean send_request(HttpPost post_request) throws IOException, UrlUnavailableException, URISyntaxException {
+        String new_url = resulting_url;
+        //send request to ENRICHR
+        CloseableHttpResponse response = httpClient.execute(post_request);
+        HttpEntity responseEntity = response.getEntity();
+        String responseString = EntityUtils.toString(responseEntity);
 
-            //send request to ENRICHR
-            CloseableHttpResponse response = httpClient.execute(post_request);
-            HttpEntity responseEntity = response.getEntity();
-            String responseString = EntityUtils.toString(responseEntity);
+        //parse JSON response to JSON object
+        JSON_Response json_response = new Gson().fromJson(responseString, JSON_Response.class);
 
-            //parse JSON response to JSON object
-            JSON_Response json_response = new Gson().fromJson(responseString, JSON_Response.class);
+        //retrieve parameter needed to build URL from shortId
+        String shortId = json_response.getshortId();
 
-            //retrieve parameter needed to build URL from shortId
-            String shortId = json_response.getshortId();
+        //Prepare URL
+        new_url = new_url.concat(shortId);
+        CheckURL(new_url);
 
-            //Prepare URL
-            resulting_url = resulting_url.concat(shortId);
-            CheckURL(resulting_url);
-
-            //Send user to prepared URL using their default browser
-            Desktop.getDesktop().browse(new URL(resulting_url).toURI());
+        //Send user to prepared URL using their default browser
+        Desktop.getDesktop().browse(new URL(new_url).toURI());
 
         return true;
     }

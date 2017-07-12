@@ -39,6 +39,15 @@ public class Analyses {
     void addAnalysis(AnalysisMember member) {analyses.add(member);}
     void addGeneSet(Pair<String, List<String>> pr) {all_gene_sets.add(pr);}
     void setNewAnalysisName(String analysisName) {new_analysis_name = analysisName;}
+    boolean renameSelectedAnalysis(String newAnalysisName) {
+        for (AnalysisMember mem : analyses) {
+            if (mem.getAnalysisName().equals(getCurrentAnalysisName())) {
+                mem.setAnalysisName(newAnalysisName);
+                return true;
+            }
+        }
+        return false;
+    }
 
     boolean setCurrentAnalysis(String analysis_name) {
         for(AnalysisMember analysis: analyses) {
@@ -64,5 +73,9 @@ public class Analyses {
             }
         }
         return false;
+    }
+
+    void clear() {
+        analyses.clear();
     }
 }
