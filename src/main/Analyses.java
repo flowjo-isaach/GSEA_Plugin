@@ -25,6 +25,7 @@ public class Analyses {
 
     AnalysisMember getCurrentAnalysisMember() {return current_analysis;}
     List<AnalysisMember> getAnalyses() {return analyses;}
+    int getCount() {return getAnalyses().size();}
     List<Pair<String, List<String>>> getAllGeneSets() {return all_gene_sets;}
     String getCurrentAnalysisName() {
         if(new_analysis_name == null && current_analysis == null) return null;

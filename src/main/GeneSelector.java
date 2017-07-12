@@ -15,9 +15,9 @@ public class GeneSelector {
     private static JList<String> all_genesets;
     private Analyses analyses;
 
-    private static JFrame myFrame;
-    private static JDialog myWindow;
-    private static JPanel myPanel;
+    private static JFrame f_main;
+    private static JPanel p_main;
+    private static JDialog d_main;
     private static JLabel l_analysis_name;
     private static JLabel l_enrichement_analysis_name;
     private static JLabel l_all_genes;
@@ -27,33 +27,33 @@ public class GeneSelector {
     private static JScrollPane sp_all_sets;
     private static JScrollPane sp_selected_sets;
     private static JPanel p_controls;
-    private static JPanel p_submit_cancel;
+    private static JPanel p_select_cancel;
     private static JButton b_move_right;
     private static JButton b_move_all_right;
     private static JButton b_move_all_left;
     private static JButton b_move_left;
-    private static JButton b_submit;
+    private static JButton b_select;
     private static JButton b_cancel;
 
     GeneSelector(Analyses analyses) {
         this.analyses = analyses;
-        myFrame = new JFrame();
-        myWindow = new JDialog(myFrame, "Gene Set Selector", true);
-        myWindow.setMinimumSize(new Dimension(700,400));
-        myPanel = new JPanel();
-        myPanel.setLayout(new GridBagLayout());
+        f_main = new JFrame();
+        d_main = new JDialog(f_main, "Gene Set Selector", true);
+        d_main.setMinimumSize(new Dimension(700,400));
+        p_main = new JPanel();
+        p_main.setLayout(new GridBagLayout());
 
         con_main = new GridBagConstraints();
-        myPanel.setBorder(BorderFactory.createEmptyBorder());
+        p_main.setBorder(BorderFactory.createEmptyBorder());
 
         l_analysis_name = new JLabel("Analysis name:");
         con_main.insets = new Insets(15,15,15,0);
-        myPanel.add(l_analysis_name, con_main);
+        p_main.add(l_analysis_name, con_main);
 
         l_enrichement_analysis_name = new JLabel(analyses.getCurrentAnalysisName());
         con_main.gridx = 1;
         con_main.anchor = GridBagConstraints.LINE_START;
-        myPanel.add(l_enrichement_analysis_name, con_main);
+        p_main.add(l_enrichement_analysis_name, con_main);
 
         l_all_genes = new JLabel("All Gene Sets:");
         con_main.gridx = 0;
@@ -61,16 +61,13 @@ public class GeneSelector {
         con_main.insets = new Insets(0,15,15,15);
         con_main.fill = GridBagConstraints.NONE;
         con_main.anchor = GridBagConstraints.LAST_LINE_START;
-        myPanel.add(l_all_genes, con_main);
+        p_main.add(l_all_genes, con_main);
 
         sp_all_sets = new JScrollPane();
         sp_all_sets.setPreferredSize(new Dimension(250,200));
 
         list_selected_sets = new SortedListModel();
         list_all_sets = new SortedListModel();
-
-        list_all_sets.clear();              //are these needed since I'm newing an instance beforehand?
-        list_selected_sets.clear();
 
         all_genesets = new JList<>(list_all_sets);
         sp_all_sets.setViewportView(all_genesets);
@@ -82,7 +79,7 @@ public class GeneSelector {
         con_main.anchor = GridBagConstraints.LINE_END;
         con_main.gridheight = 6;
         con_main.gridwidth = 2;
-        myPanel.add(sp_all_sets, con_main);
+        p_main.add(sp_all_sets, con_main);
 
         sp_selected_sets = new JScrollPane();
         sp_selected_sets.setPreferredSize(new Dimension(250,200));
@@ -97,7 +94,7 @@ public class GeneSelector {
         con_main.gridheight = 6;
         con_main.fill = GridBagConstraints.BOTH;
         con_main.anchor = GridBagConstraints.LINE_END;
-        myPanel.add(sp_selected_sets, con_main);
+        p_main.add(sp_selected_sets, con_main);
 
         p_controls = new JPanel();
         p_controls.setLayout(new GridBagLayout());
@@ -134,7 +131,7 @@ public class GeneSelector {
         con_main.fill = GridBagConstraints.NONE;
         con_main.insets = new Insets(0,0,0,0);
         con_main.anchor = GridBagConstraints.CENTER;
-        myPanel.add(p_controls, con_main);
+        p_main.add(p_controls, con_main);
 
         l_selected_gene_sets = new JLabel("Selected Gene Sets:");
         con_main.gridx = 4;
@@ -143,37 +140,37 @@ public class GeneSelector {
         con_main.weighty = 0;
         con_main.insets = new Insets(0,15,15,15);
         con_main.anchor = GridBagConstraints.LAST_LINE_START;
-        myPanel.add(l_selected_gene_sets, con_main);
+        p_main.add(l_selected_gene_sets, con_main);
 
-        p_submit_cancel = new JPanel();
-        p_submit_cancel.setLayout(new GridBagLayout());
+        p_select_cancel = new JPanel();
+        p_select_cancel.setLayout(new GridBagLayout());
 
         b_cancel = new JButton("Cancel");
         b_cancel.setPreferredSize(new Dimension(100,25));
         con_controls.gridy = 0;
         con_controls.insets = new Insets(0,0,0,15);
 
-        p_submit_cancel.add(b_cancel, con_controls);
+        p_select_cancel.add(b_cancel, con_controls);
 
-        b_submit = new JButton("Submit");
-        b_submit.setPreferredSize(new Dimension(100,25));
+        b_select = new JButton("Select");
+        b_select.setPreferredSize(new Dimension(100,25));
         con_controls.gridx = 1;
         con_controls.insets = new Insets(0,0,0,0);
-        p_submit_cancel.add(b_submit, con_controls);
+        p_select_cancel.add(b_select, con_controls);
 
         con_main.gridx = 3;
         con_main.gridy = 8;
         con_main.gridwidth = 2;
         con_main.insets = new Insets(0,0,15,15);
         con_main.anchor = GridBagConstraints.LAST_LINE_END;
-        myPanel.add(p_submit_cancel, con_main);
+        p_main.add(p_select_cancel, con_main);
 
         PopulatePanels();
         SetupListeners();
 
-        myWindow.add(myPanel);
-        myWindow.pack();
-        myWindow.setVisible(true);
+        d_main.add(p_main);
+        d_main.pack();
+        d_main.setVisible(true);
     }
 
     private void PopulatePanels() {
@@ -197,11 +194,11 @@ public class GeneSelector {
     }
 
     private void SetupListeners() {
-        b_submit.addActionListener(e -> {
+        b_select.addActionListener(e -> {
             SettingsWindow.UpdateSelectedGeneSets(selected_genesets);
-            myWindow.dispose();
+            d_main.dispose();
         });
-        b_cancel.addActionListener(e -> myWindow.dispose());
+        b_cancel.addActionListener(e -> d_main.dispose());
         b_move_right.addActionListener(e -> {
             for(String selected: all_genesets.getSelectedValuesList()){
                 list_selected_sets.add(selected);

@@ -4,6 +4,7 @@ import com.flowjo.lib.parameters.*;
 import com.treestar.lib.PluginHelper;
 import com.treestar.lib.xml.SElement;
 import javafx.util.Pair;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.http.client.methods.HttpPost;
 
 import java.awt.event.*;
@@ -25,18 +26,18 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class SettingsWindow extends JPanel implements ActionListener {
 
     private static SortedListModel listModel = new SortedListModel();
-    private ParameterSetMgrInterface mParameterSetManager;
+    private ParameterSetMgrInterface parameterSetManager;
     private static JList<String> selected_genesets = new JList<>(listModel);
     private static int current_analysis_index;
     private boolean pending_changes = false;
     private static Analyses analyses;
 
-    private static JFrame myFrame;
-    private static JPanel myPanel;
-    private static JDialog myWindow;
+    private static JFrame f_main;
+    private static JPanel p_main;
+    private static JDialog d_main;
     private static JLabel l_analysis_name;
-    private static JLabel label_selected_gensets;
-    private static JScrollPane scrollPane;
+    private static JLabel l_selected_gensets;
+    private static JScrollPane sp_main;
     private static JComboBox c_analysisList;
     private static JButton b_select_genesets;
     private static JButton b_load;
@@ -46,38 +47,34 @@ public class SettingsWindow extends JPanel implements ActionListener {
     private static JButton b_close;
 
     SettingsWindow(SElement fcmlQueryElement) {
-        myFrame = new JFrame();
+        f_main = new JFrame();
         analyses = Analyses.getInstance();
-        myFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        mParameterSetManager = PluginHelper.getParameterSetMgr(fcmlQueryElement);
+        f_main.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        parameterSetManager = PluginHelper.getParameterSetMgr(fcmlQueryElement);
 
         initializeGeneSets();
 
-        //Displays all contents within the frame
-        myWindow = new JDialog(myFrame, "Gene Set Enrichment Analysis", true);
-        myWindow.setMinimumSize(new Dimension(550,375));
-        myPanel = new JPanel();
-        myPanel.setLayout(new GridBagLayout());
+        d_main = new JDialog(f_main, "Gene Set Enrichment Analysis", true);
+        d_main.setMinimumSize(new Dimension(550,375));
+        p_main = new JPanel();
+        p_main.setLayout(new GridBagLayout());
 
         GridBagConstraints constraints = new GridBagConstraints();
-        myPanel.setBorder(BorderFactory.createEmptyBorder());
+        p_main.setBorder(BorderFactory.createEmptyBorder());
 
         l_analysis_name = new JLabel("Analysis name:");
         constraints.insets = new Insets(20,15,15,15);
         constraints.anchor = GridBagConstraints.LINE_END;
-        myPanel.add(l_analysis_name, constraints);
+        p_main.add(l_analysis_name, constraints);
 
         c_analysisList = new JComboBox();
-        c_analysisList.addItem("Add Item...");
 
-        c_analysisList.setEditable(true);
-        c_analysisList.addActionListener(this);     //what does this do?
         constraints.gridx = 1;
         constraints.insets = new Insets(15,0,0,15);
         constraints.fill = GridBagConstraints.HORIZONTAL;
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         constraints.gridwidth = 4;
-        myPanel.add(c_analysisList, constraints);
+        p_main.add(c_analysisList, constraints);
 
         b_load = new JButton("Load");
         b_load.setPreferredSize(new Dimension(100,25));
@@ -87,7 +84,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
         constraints.fill = GridBagConstraints.NONE;
         constraints.anchor = GridBagConstraints.LINE_END;
         constraints.gridwidth = 1;
-        myPanel.add(b_load, constraints);
+        p_main.add(b_load, constraints);
 
         b_rename = new JButton("Rename");
         b_rename.setPreferredSize(new Dimension(100,25));
@@ -97,24 +94,24 @@ public class SettingsWindow extends JPanel implements ActionListener {
         constraints.fill = GridBagConstraints.HORIZONTAL;
         constraints.anchor = GridBagConstraints.CENTER;
         constraints.gridwidth = 1;
-        myPanel.add(b_rename, constraints);
+        p_main.add(b_rename, constraints);
 
         b_delete = new JButton("Delete");
         b_delete.setPreferredSize(new Dimension(100,25));
         constraints.gridx = 3;
-        myPanel.add(b_delete, constraints);
+        p_main.add(b_delete, constraints);
 
-        label_selected_gensets = new JLabel("Selected Gene Sets:");
+        l_selected_gensets = new JLabel("Selected Gene Sets:");
         constraints.gridx = 0;
         constraints.gridy = 1;
         constraints.insets = new Insets(15,15,0,15);
         constraints.fill = GridBagConstraints.NONE;
         constraints.anchor = GridBagConstraints.LINE_START;
-        myPanel.add(label_selected_gensets, constraints);
+        p_main.add(l_selected_gensets, constraints);
 
-        scrollPane = new JScrollPane();
-        scrollPane.setPreferredSize(new Dimension(250,200));
-        scrollPane.setViewportView(selected_genesets);
+        sp_main = new JScrollPane();
+        sp_main.setPreferredSize(new Dimension(250,200));
+        sp_main.setViewportView(selected_genesets);
         selected_genesets.setSelectionModel(new NoSelectionModel());
         constraints.gridy = 2;
         constraints.weightx = 1;
@@ -123,7 +120,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
         constraints.fill = GridBagConstraints.BOTH;
         constraints.anchor = GridBagConstraints.LINE_END;
         constraints.gridwidth = 2;
-        myPanel.add(scrollPane, constraints);
+        p_main.add(sp_main, constraints);
 
         b_select_genesets = new JButton("Select Gene Sets");
 
@@ -136,7 +133,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
         constraints.fill = GridBagConstraints.HORIZONTAL;
         constraints.anchor = GridBagConstraints.PAGE_START;
         constraints.gridwidth = 3;
-        myPanel.add(b_select_genesets, constraints);
+        p_main.add(b_select_genesets, constraints);
 
         b_close = new JButton("Close");
         constraints.gridx = 2;
@@ -145,22 +142,23 @@ public class SettingsWindow extends JPanel implements ActionListener {
         constraints.insets = new Insets(0,0,15,15);
         constraints.anchor = GridBagConstraints.LAST_LINE_END;
         constraints.gridwidth = 1;
-        myPanel.add(b_close, constraints);
+        p_main.add(b_close, constraints);
 
         b_submit = new JButton("Submit");
         b_submit.setPreferredSize(new Dimension(100,25));
         constraints.gridx = 3;
         constraints.gridwidth = 2;
         constraints.insets = new Insets(0,0,15,15);
-        myPanel.add(b_submit, constraints);
+        p_main.add(b_submit, constraints);
 
+        UpdateComboList();
         SetupListeners();
 
-        myWindow.add(myPanel);
-        myWindow.pack();
-        //Set focus on input field on first run
+        d_main.add(p_main);
+        d_main.pack();
+        //Set focus on input field for first run
         c_analysisList.requestFocus();
-        myWindow.setVisible(true);
+        d_main.setVisible(true);
     }
 
     private boolean AddCurrentItem(JComboBox cbox) {
@@ -211,7 +209,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
         analysis.setAnalysisName(analyses.getCurrentAnalysisName());
 
         Iterator gene_it = analyses.getAllGeneSets().iterator();
-        ListModel<String> model = selected_genesets.getModel();
+        ListModel<String> model = list.getModel();
         while(gene_it.hasNext()) {
             Pair<String, List<String>> pr = (javafx.util.Pair)gene_it.next();
             for(int i = 0; i < model.getSize(); i++)
@@ -230,38 +228,11 @@ public class SettingsWindow extends JPanel implements ActionListener {
     }
 
     private void initializeGeneSets() {
-        Iterator param_it = this.mParameterSetManager.getAllParameterSets().iterator();
-
-        while(param_it.hasNext()) {
-            ParameterSetInterface set = (ParameterSetInterface)param_it.next();
-            analyses.addGeneSet(new Pair<>(set.getName(), set.getParameterNames()));
+        for(ParameterSetInterface set : parameterSetManager.getAllParameterSets()) {
+            if(!set.getName().equals("All"))
+                analyses.addGeneSet(new Pair<>(set.getName(), set.getParameterNames()));
         }
     }
-
-//    private void initializeGeneSets() {
-//        ArrayList<String> collections = new ArrayList(this.mParameterSetManager.getParameterSetCollectionNames());
-//        collections.add(0, "All");
-//
-//        Collection<ParameterSetInterface> sets = new ArrayList();
-//        ParameterSetInterface allSet = this.mParameterSetManager.getParameterSet("All");
-//
-//        if(allSet != null) {
-//            ((Collection)sets).add(allSet);
-//            Iterator var6 = this.mParameterSetManager.getAllParameterSets().iterator();
-//
-//            while(var6.hasNext()) {
-//                ParameterSetInterface set = (ParameterSetInterface)var6.next();
-//                if(!set.getName().equals("All")) {
-//                    gene_sets.add(new Pair<>(set.getName(), set.getParameterNames()));
-//                }
-//            }
-//
-//            System.out.println("sets: ".concat(sets.toString()));
-//            System.out.println("genes".concat(gene_sets.toString()));
-//        } else {
-//            sets = this.mParameterSetManager.getParameterSets();
-//        }
-//    }
 
     private void SendEnrichrRequest(List<String> all_genes) {
         Enricher_Request enricher = null;
@@ -307,17 +278,17 @@ public class SettingsWindow extends JPanel implements ActionListener {
                     analysis_name = analysis_name.replaceAll("[\\[\\]]", "");
                     analysis.setAnalysisName(analysis_name);
 
-                    while ((geneset_name = in_stream.readLine()) != null && geneset_regex.matcher(geneset_name).find()) {
+                    while ((geneset_name = in_stream.readLine()) != null && geneset_regex.matcher(geneset_name).find() && !geneset_name.equals("---END_GENE_SET---")) {
                         List<String> gene_list = new ArrayList<>();
                         geneset_name = geneset_name.replaceAll("[\\(\\)]", "");
 
-                        while ((gene_name = in_stream.readLine()) != null && !gene_name.equals("---END_GENE_SET---"))
+                        while ((gene_name = in_stream.readLine()) != null && !gene_name.equals("---END_GENE_LIST---"))
                             gene_list.add(gene_name);
 
                         analysis.addGeneSet(new Pair<>(geneset_name, gene_list));
                     }
                     analyses.addAnalysis(analysis);
-                    SetupComboList();
+                    UpdateComboList();
                 }
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -338,11 +309,12 @@ public class SettingsWindow extends JPanel implements ActionListener {
                 writer.append("[".concat(analysis.getAnalysisName()).concat("]\n"));
                 for(Pair geneset: analysis.getGene_sets()) {
                     writer.append("(".concat((String)geneset.getKey()).concat(")\n"));
-                    for(String gene: (List<String>)geneset.getValue()) {
+                    for(String gene: (List<String>)geneset.getValue())
                         writer.append(gene.concat("\n"));
-                    }
-                    writer.append("---END_GENE_SET---\n");
+
+                    writer.append("---END_GENE_LIST---\n");
                 }
+                writer.append("---END_GENE_SET---\n");
             }
 
         } catch (IOException e) {
@@ -359,15 +331,20 @@ public class SettingsWindow extends JPanel implements ActionListener {
         }
     }
 
-    private void SetupComboList() {
+    private void UpdateComboList() {
         c_analysisList.removeAllItems();
         c_analysisList.addItem("Add Item...");
 
-        for(AnalysisMember mem : analyses.getAnalyses())
-            c_analysisList.insertItemAt(mem.getAnalysisName(),0);
+        if(analyses.getCount() > 0) {
+            for (AnalysisMember mem : analyses.getAnalyses())
+                c_analysisList.insertItemAt(mem.getAnalysisName(), 0);
+            c_analysisList.setEditable(false);
+        }
+        else
+            c_analysisList.setEditable(true);
 
         c_analysisList.setSelectedIndex(0);
-        c_analysisList.setEditable(false);
+
     }
 
     private void SetupListeners() {
@@ -457,11 +434,14 @@ public class SettingsWindow extends JPanel implements ActionListener {
                     chooser.setCurrentDirectory(new File("./plugins/GSEA/"));
                     int retval = chooser.showSaveDialog(getParent());
 
-                    if (retval == JFileChooser.APPROVE_OPTION)
-                        SaveCSV(chooser.getSelectedFile().getName());
+                    if (retval == JFileChooser.APPROVE_OPTION) {
+                        String filename = chooser.getSelectedFile().getName();
+                        filename = FilenameUtils.removeExtension(filename);
+                        SaveCSV(filename);
+                    }
                 }
             }
-            myWindow.dispose();
+            d_main.dispose();
         });
 
         b_submit.addActionListener(e -> {
