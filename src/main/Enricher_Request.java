@@ -42,11 +42,12 @@ class Enricher_Request {
         genes = new StringJoiner("\n");
     }
 
-    HttpPost prepare_request() {
+    HttpPost prepare_request(String description) {
         String genelist = genes.toString();
         HttpPost post_request = new HttpPost(enrichr_url);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.addTextBody("list", genelist);
+        builder.addTextBody("description", description);
 
         //build multipart/form-data type for request
         HttpEntity multipart = builder.build();

@@ -246,7 +246,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
         for(String gene : all_genes)
             enricher.add_gene(gene);
 
-        HttpPost request = enricher.prepare_request();
+        HttpPost request = enricher.prepare_request(analyses.getCurrentAnalysisName());
         try {
             if(request != null)
                 enricher.send_request(request);

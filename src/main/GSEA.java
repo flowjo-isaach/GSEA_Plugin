@@ -27,51 +27,29 @@ public class GSEA implements PopulationPluginInterface
     public Icon getIcon() { return null; }
 
     @Override
-    public String getName() { return "This_is_my_plugin_name"; }
+    public String getName() { return null; }
 
     @Override
     public List<String> getParameters() {return null;}
 
     @Override
-    public String getVersion()
-    {
-        return "1.0";
-    }
+    public String getVersion() {return "1.0";}
 
     /**
-     * Invokes the algorithm and returns the results.
+     * Doesn't get called since promptForOptions returns false
      */
     @Override
-    public ExternalAlgorithmResults invokeAlgorithm(SElement fcmlElem, File sampleFile, File outputFolder) {
-        ExternalAlgorithmResults results = new ExternalAlgorithmResults();
-//        try {
-//            call_enricher();
-//        } catch (IOException | URISyntaxException | UrlUnavailableException e) {
-//            e.printStackTrace();
-//        }
-        return results;
-    }
+    public ExternalAlgorithmResults invokeAlgorithm(SElement fcmlElem, File sampleFile, File outputFolder) {return null;}
 
     @Override
     public boolean promptForOptions(SElement fcmlQueryElement, List<String> parameterNames) {
-        SettingsWindow settings = new SettingsWindow(fcmlQueryElement);
+        new SettingsWindow(fcmlQueryElement);
         return false;
     }
 
     @Override
-    public void setElement(SElement elem) { }
+    public void setElement(SElement elem) {}
 
     @Override
-    public ExportFileTypes useExportFileType()
-    {
-        return ExportFileTypes.CSV_SCALE;   //CSV_PIR_SCALE ???
-    }
-
-    private static void call_enricher() throws IOException, UrlUnavailableException, URISyntaxException {
-        Enricher_Request enricher = new Enricher_Request();
-        enricher.add_gene("PHF14");
-        enricher.add_gene("RBM3");
-        HttpPost request = enricher.prepare_request();
-        enricher.send_request(request);
-    }
+    public ExportFileTypes useExportFileType() {return null;}
 }
