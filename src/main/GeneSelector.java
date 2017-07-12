@@ -4,8 +4,6 @@ import javafx.util.Pair;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 /**
  * Created by Isaac on 7/11/2017.
@@ -14,8 +12,7 @@ public class GeneSelector {
     private static SortedListModel list_selected_sets;
     private static SortedListModel list_all_sets;
     private static JList<String> selected_genesets;
-//    private static JList<String> selected_genesets = new JList<>(listModel);
-    private static JList<String> select_genesets;
+    private static JList<String> all_genesets;
     private Analyses analyses;
 
     private static JFrame myFrame;
@@ -53,7 +50,7 @@ public class GeneSelector {
         con_main.insets = new Insets(15,15,15,0);
         myPanel.add(l_analysis_name, con_main);
 
-        l_enrichement_analysis_name = new JLabel(analyses.getCurrentAnalysis().getAnalysisName());
+        l_enrichement_analysis_name = new JLabel(analyses.getCurrentAnalysisName());
         con_main.gridx = 1;
         con_main.anchor = GridBagConstraints.LINE_START;
         myPanel.add(l_enrichement_analysis_name, con_main);
@@ -75,8 +72,8 @@ public class GeneSelector {
         list_all_sets.clear();              //are these needed since I'm newing an instance beforehand?
         list_selected_sets.clear();
 
-        select_genesets = new JList<>(list_all_sets);
-        sp_all_sets.setViewportView(select_genesets);
+        all_genesets = new JList<>(list_all_sets);
+        sp_all_sets.setViewportView(all_genesets);
         con_main.gridx = 0;
         con_main.gridy = 2;
         con_main.weightx = 1;
@@ -184,69 +181,56 @@ public class GeneSelector {
 
         for(Pair<String, java.util.List<String>> geneset : analyses.getAllGeneSets()) {
             selected = false;
-            for(Pair<String, java.util.List<String>> set : analyses.getCurrentAnalysis().getGene_sets()) {
-                if(geneset.getKey().equals(set.getKey()))
-                    selected = true;
+            if(analyses.getCurrentAnalysisMember() != null) {
+                for (Pair<String, java.util.List<String>> set : analyses.getCurrentAnalysisMember().getGene_sets()) {
+                    if (geneset.getKey().equals(set.getKey()))
+                        selected = true;
+                }
+                if (selected)
+                    list_selected_sets.add(geneset.getKey());
+                else
+                    list_all_sets.add(geneset.getKey());
             }
-            if(selected)
-                list_selected_sets.add(geneset.getKey());
             else
                 list_all_sets.add(geneset.getKey());
         }
     }
 
     private void SetupListeners() {
-        b_submit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SettingsWindow.UpdateSelectedGeneSets(selected_genesets);
-                myWindow.dispose();
+        b_submit.addActionListener(e -> {
+            SettingsWindow.UpdateSelectedGeneSets(selected_genesets);
+            myWindow.dispose();
+        });
+        b_cancel.addActionListener(e -> myWindow.dispose());
+        b_move_right.addActionListener(e -> {
+            for(String selected: all_genesets.getSelectedValuesList()){
+                list_selected_sets.add(selected);
+                list_all_sets.removeElement(selected);
             }
+            all_genesets.clearSelection();
         });
-        b_cancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e){ myWindow.dispose(); }
-        });
-        b_move_right.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                for(String selected:select_genesets.getSelectedValuesList()){
-                    list_selected_sets.add(selected);
-                    list_all_sets.removeElement(selected);
-                }
-                select_genesets.clearSelection();
-            }
-        });
-        b_move_all_right.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ListModel element = select_genesets.getModel();
+        b_move_all_right.addActionListener(e -> {
+            ListModel element = all_genesets.getModel();
 
-                for(int i = 0; select_genesets.getModel().getSize() > 0;){
-                    list_selected_sets.add(element.getElementAt(i));
-                    list_all_sets.removeElement(list_all_sets.getElementAt(i));
-                }
+            for(int i = 0; all_genesets.getModel().getSize() > 0;){
+                list_selected_sets.add(element.getElementAt(i));
+                list_all_sets.removeElement(list_all_sets.getElementAt(i));
             }
         });
-        b_move_all_left.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ListModel element = selected_genesets.getModel();
+        b_move_all_left.addActionListener(e -> {
+            ListModel element = selected_genesets.getModel();
 
-                for(int i = 0; selected_genesets.getModel().getSize() > 0;){
-                    list_all_sets.add(element.getElementAt(i));
-                    list_selected_sets.removeElement(list_selected_sets.getElementAt(i));
-                }
+            for(int i = 0; selected_genesets.getModel().getSize() > 0;){
+                list_all_sets.add(element.getElementAt(i));
+                list_selected_sets.removeElement(list_selected_sets.getElementAt(i));
             }
         });
-        b_move_left.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                for(String selected: selected_genesets.getSelectedValuesList()) {
-                    list_all_sets.add(selected);
-                    list_selected_sets.removeElement(selected);
-                }
-                selected_genesets.clearSelection();
+        b_move_left.addActionListener(e -> {
+            for(String selected: selected_genesets.getSelectedValuesList()) {
+                list_all_sets.add(selected);
+                list_selected_sets.removeElement(selected);
             }
+            selected_genesets.clearSelection();
         });
     }
 }

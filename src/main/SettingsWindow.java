@@ -27,7 +27,6 @@ public class SettingsWindow extends JPanel implements ActionListener {
     private static SortedListModel listModel = new SortedListModel();
     private ParameterSetMgrInterface mParameterSetManager;
     private static JList<String> selected_genesets = new JList<>(listModel);
-    private static String new_analysis_name;
     private static int current_analysis_index;
     private boolean pending_changes = false;
     private static Analyses analyses;
@@ -166,12 +165,11 @@ public class SettingsWindow extends JPanel implements ActionListener {
 
     private boolean AddCurrentItem(JComboBox cbox) {
         boolean retval = false;
-
-        String analysis_field = (String) cbox.getEditor().getItem();
+        String new_analysis_name = (String) cbox.getEditor().getItem();
 
         //Ensure field is not empty
-        if (analysis_field != null && !analysis_field.isEmpty()) {
-            new_analysis_name = analysis_field;
+        if (new_analysis_name != null && !new_analysis_name.isEmpty()) {
+            analyses.setNewAnalysisName(new_analysis_name);
 
             //ensure the name in the text field is not equal to the "Add item..." option
             if(!new_analysis_name.equals(cbox.getItemAt(cbox.getItemCount() - 1))) {
@@ -200,6 +198,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
 //                        new Display_Message("Disclaimer", "\"".concat(new_analysis_name.concat("\" already exists")));
 //                    }
                 }
+                current_analysis_index = 0;
             } else
                 new Display_Message("Disclaimer", "\"".concat(new_analysis_name.concat("\" is not valid")));
         }
@@ -209,7 +208,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
 
     static void UpdateSelectedGeneSets(JList<String> list) {
         AnalysisMember analysis = new AnalysisMember();
-        analysis.setAnalysisName(new_analysis_name);
+        analysis.setAnalysisName(analyses.getCurrentAnalysisName());
 
         Iterator gene_it = analyses.getAllGeneSets().iterator();
         ListModel<String> model = selected_genesets.getModel();
@@ -384,14 +383,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
 
         c_analysisList.addFocusListener(new FocusListener() {
             @Override
-            public void focusGained(FocusEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        c_analysisList.getEditor().selectAll();
-                    }
-                });
-            }
+            public void focusGained(FocusEvent e) {SwingUtilities.invokeLater(() -> c_analysisList.getEditor().selectAll());}
 
             @Override
             public void focusLost(FocusEvent e) {}
@@ -407,101 +399,83 @@ public class SettingsWindow extends JPanel implements ActionListener {
             }
         });
 
-        c_analysisList.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                //if "Add item..." is selected
-                if(c_analysisList.getSelectedIndex() == c_analysisList.getItemCount() - 1) {
-                    c_analysisList.setEditable(true);
-                    c_analysisList.grabFocus();
-                }
-                if(c_analysisList.getSelectedIndex() != -1) {
-                    current_analysis_index = c_analysisList.getSelectedIndex();
-
-                    //ensure the current index isn't "Add Item..."
-                    if(current_analysis_index != c_analysisList.getItemCount() - 1)
-                        analyses.setCurrentAnalysis((String)c_analysisList.getSelectedItem());
-                }
-            }
-        });
-
-        b_select_genesets.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e){
-                if(AddCurrentItem(c_analysisList)) {
-                    pending_changes = true;
-                    new GeneSelector(analyses);
-                }
-            }
-        });
-
-        b_load.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {LoadCSV();}
-        });
-
-        b_rename.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        c_analysisList.addActionListener(e -> {
+            //if "Add item..." is selected
+            if(c_analysisList.getSelectedIndex() == c_analysisList.getItemCount() - 1) {
                 c_analysisList.setEditable(true);
-                c_analysisList.requestFocus();
-                pending_changes = true;
+                c_analysisList.grabFocus();
+            }
+            if(c_analysisList.getSelectedIndex() != -1) {
+                current_analysis_index = c_analysisList.getSelectedIndex();
+
+                //ensure the current index isn't "Add Item..."
+                if(current_analysis_index != c_analysisList.getItemCount() - 1)
+                    analyses.setCurrentAnalysis((String)c_analysisList.getSelectedItem());
             }
         });
 
-        b_delete.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(c_analysisList.getSelectedIndex() != c_analysisList.getItemCount() - 1) {
-                    Display_Message message = new Display_Message("prompt", "Are you sure you would like to delete: ".concat((String)c_analysisList.getItemAt(current_analysis_index)));
-                    if (message.getResponse() == JOptionPane.OK_OPTION) {
-                        pending_changes = true;
-                        c_analysisList.removeItemAt(current_analysis_index);
-                        c_analysisList.setSelectedIndex(0);
+        b_select_genesets.addActionListener(e -> {
+            if(c_analysisList.isEditable())
+                AddCurrentItem(c_analysisList);
 
-                        if(c_analysisList.getItemCount() != 1)
-                            c_analysisList.setEditable(false);
-                    }
-                }
-                else
-                    new Display_Message("disclaimer", "Cannot delete this item");
-            }
+            pending_changes = true;
+            new GeneSelector(analyses);
         });
 
-        b_close.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (pending_changes) {
-                    Display_Message prompt = new Display_Message("Prompt", "Would you like to save?");
+        b_load.addActionListener(e -> LoadCSV());
 
-                    if (prompt.getResponse() == JOptionPane.OK_OPTION) {
-                        JFileChooser chooser = new JFileChooser();
-                        FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV files", "csv");
-                        chooser.setFileFilter(filter);
-                        chooser.setCurrentDirectory(new File("./plugins/GSEA/"));
-                        int retval = chooser.showSaveDialog(getParent());
-
-                        if (retval == JFileChooser.APPROVE_OPTION)
-                            SaveCSV(chooser.getSelectedFile().getName());
-                    }
-                }
-                myWindow.dispose();
-            }
+        b_rename.addActionListener(e -> {
+            c_analysisList.setEditable(true);
+            c_analysisList.requestFocus();
+            pending_changes = true;
         });
 
-        b_submit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Iterator gene_it = analyses.getAllGeneSets().iterator();
-                List<String> all_genes = new ArrayList<>();
-                ListModel<String> model = selected_genesets.getModel();
-                while(gene_it.hasNext()) {
-                    Pair<String, List<String>> pr = (javafx.util.Pair)gene_it.next();
-                    for(int i = 0; i < model.getSize(); i++) {
-                        if(model.getElementAt(i).equals(pr.getKey()))
-                            all_genes = Stream.concat(all_genes.stream(), pr.getValue().stream()).collect(Collectors.toList());
-                    }
+        b_delete.addActionListener(e -> {
+            if(c_analysisList.getSelectedIndex() != c_analysisList.getItemCount() - 1) {
+                Display_Message message = new Display_Message("prompt", "Are you sure you would like to delete: ".concat((String)c_analysisList.getItemAt(current_analysis_index)));
+                if (message.getResponse() == JOptionPane.OK_OPTION) {
+                    pending_changes = true;
+                    c_analysisList.removeItemAt(current_analysis_index);
+                    c_analysisList.setSelectedIndex(0);
+                    analyses.removeAnalysis(analyses.getCurrentAnalysisName());
+                    if(c_analysisList.getItemCount() != 1)
+                        c_analysisList.setEditable(false);
                 }
-                SendEnrichrRequest(all_genes);
             }
+            else
+                new Display_Message("disclaimer", "Cannot delete this item");
+        });
+
+        b_close.addActionListener(e -> {
+            if (pending_changes) {
+                Display_Message prompt = new Display_Message("Prompt", "Would you like to save?");
+
+                if (prompt.getResponse() == JOptionPane.OK_OPTION) {
+                    JFileChooser chooser = new JFileChooser();
+                    FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV files", "csv");
+                    chooser.setFileFilter(filter);
+                    chooser.setCurrentDirectory(new File("./plugins/GSEA/"));
+                    int retval = chooser.showSaveDialog(getParent());
+
+                    if (retval == JFileChooser.APPROVE_OPTION)
+                        SaveCSV(chooser.getSelectedFile().getName());
+                }
+            }
+            myWindow.dispose();
+        });
+
+        b_submit.addActionListener(e -> {
+            Iterator gene_it = analyses.getAllGeneSets().iterator();
+            List<String> all_genes = new ArrayList<>();
+            ListModel<String> model = selected_genesets.getModel();
+            while(gene_it.hasNext()) {
+                Pair<String, List<String>> pr = (Pair)gene_it.next();
+                for(int i = 0; i < model.getSize(); i++) {
+                    if(model.getElementAt(i).equals(pr.getKey()))
+                        all_genes = Stream.concat(all_genes.stream(), pr.getValue().stream()).collect(Collectors.toList());
+                }
+            }
+            SendEnrichrRequest(all_genes);
         });
     }
 

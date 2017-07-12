@@ -35,10 +35,11 @@ class Enricher_Request {
     private CloseableHttpClient httpClient = HttpClients.createDefault();
     final private String enrichr_url = "http://amp.pharm.mssm.edu/Enrichr/addList";
     private String resulting_url = "http://amp.pharm.mssm.edu/Enrichr/enrich?dataset=";
-    private static StringJoiner genes = new StringJoiner("\n");
+    private static StringJoiner genes;
 
     Enricher_Request() throws IOException, UrlUnavailableException {
         CheckURL(enrichr_url);
+        genes = new StringJoiner("\n");
     }
 
     HttpPost prepare_request() {

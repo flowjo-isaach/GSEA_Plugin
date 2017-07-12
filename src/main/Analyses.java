@@ -12,7 +12,8 @@ public class Analyses {
     private static Analyses singleton = null;
     private static List<AnalysisMember> analyses;
     private static List<Pair<String, List<String>>> all_gene_sets = new ArrayList<>();
-    private static AnalysisMember current_analysis;
+    private static AnalysisMember current_analysis = null;
+    private static String new_analysis_name;
 
     private Analyses() {analyses = new ArrayList<>();}
     static Analyses getInstance() {
@@ -22,11 +23,16 @@ public class Analyses {
         return singleton;
     }
 
-    AnalysisMember getCurrentAnalysis() {return current_analysis;}
+    AnalysisMember getCurrentAnalysisMember() {return current_analysis;}
     List<AnalysisMember> getAnalyses() {return analyses;}
     List<Pair<String, List<String>>> getAllGeneSets() {return all_gene_sets;}
+    String getCurrentAnalysisName() {
+        if(new_analysis_name == null && current_analysis == null) return null;
+        return (new_analysis_name != null) ? new_analysis_name : current_analysis.getAnalysisName();
+    }
     void addAnalysis(AnalysisMember member) {analyses.add(member);}
     void addGeneSet(Pair<String, List<String>> pr) {all_gene_sets.add(pr);}
+    void setNewAnalysisName(String analysisName) {new_analysis_name = analysisName;}
 
     boolean setCurrentAnalysis(String analysis_name) {
         for(AnalysisMember analysis: analyses) {
