@@ -1,9 +1,11 @@
 package main;
 
 import com.flowjo.lib.parameters.*;
+import com.google.common.base.CharMatcher;
 import com.treestar.lib.PluginHelper;
 import com.treestar.lib.xml.SElement;
 import javafx.util.Pair;
+import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.client.methods.HttpPost;
 
@@ -69,6 +71,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
         p_main.add(l_analysis_name, cons_main);
 
         c_analysisList = new JComboBox();
+
         cons_main.gridx = 1;
         cons_main.insets = new Insets(15,0,0,15);
         cons_main.fill = GridBagConstraints.HORIZONTAL;
@@ -153,7 +156,8 @@ public class SettingsWindow extends JPanel implements ActionListener {
 
         d_main.add(p_main);
         d_main.pack();
-        //Set focus on input field for first run
+
+
         c_analysisList.requestFocus();
         d_main.setVisible(true);
     }
@@ -163,16 +167,16 @@ public class SettingsWindow extends JPanel implements ActionListener {
         String new_analysis_name = (String) cbox.getEditor().getItem();
 
         //Ensure field is not empty
-        if (new_analysis_name != null && !new_analysis_name.isEmpty()) {
+        if (new_analysis_name != null && !new_analysis_name.isEmpty() && new_analysis_name.length() < 256 && new_analysis_name.chars().allMatch( c -> c < 256)) {
             analyses.setNewAnalysisName(new_analysis_name);
 
             //ensure the name in the text field is not equal to the "Add item..." option
             if(!new_analysis_name.equals(cbox.getItemAt(cbox.getItemCount() - 1))) {
                 //if item selected is "add item..." add item
                 if (current_analysis_index == cbox.getItemCount() - 1) {
-                    cbox.insertItemAt(new_analysis_name, 0);
-                    cbox.setEditable(false);
-                    retval = true;
+                        cbox.insertItemAt(new_analysis_name, 0);
+                        cbox.setEditable(false);
+                        retval = true;
                     //else rename current item
                 } else {
                     int count = 0;
@@ -197,6 +201,8 @@ public class SettingsWindow extends JPanel implements ActionListener {
             } else
                 new Display_Message("Disclaimer", "\"".concat(new_analysis_name.concat("\" is not valid")));
         }
+            else
+                new Display_Message("Error", "Analysis name invalid, ensure it's no longer than 256 characters long and valid ASCII characters");
 
         return retval;
     }
