@@ -36,7 +36,7 @@ class Enricher_Request {
             CheckURL(enrichr_url);
         }
         catch (Exception e) {
-            new Display_Message("Error", e.getMessage());
+            new DisplayMessage("Error", e.getMessage());
         }
         genes = new StringJoiner("\n");
     }

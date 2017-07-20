@@ -43,8 +43,8 @@ public class SettingsWindow extends JPanel implements ActionListener {
     private static JButton b_close;
     private static GridBagConstraints cons_main;
 
-    SettingsWindow(Collection<ParameterSetInterface> allParams) {
-        analyses = Analyses.getInstance(allParams);
+    SettingsWindow(Collection<ParameterSetInterface> all_genes) {
+        analyses = Analyses.getInstance(all_genes);
         gsea_man = new GSEAManager(analyses);
         f_main = new JFrame();
         f_main.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -154,44 +154,51 @@ public class SettingsWindow extends JPanel implements ActionListener {
         d_main.setVisible(true);
     }
 
-    private boolean AddCurrentItem() {
+    private boolean ModifyCurrentItem() {
         String new_analysis_name = (String) c_analysisList.getEditor().getItem();
 
         if (ValidateAnalysisName(new_analysis_name)) {
             pending_changes = true;
 
             //if item selected is "add item..." add item
-            if (selected_analysis_index == c_analysisList.getItemCount() - 1) {
-                AnalysisMember analysis = new AnalysisMember();
-                analysis.setAnalysisName(new_analysis_name);
-                analyses.addAnalysis(analysis);
-                c_analysisList.insertItemAt(new_analysis_name, 0);
-                c_analysisList.setEditable(false);
-                //else rename current item
-            } else {
-                int count = 0;
+            if (selected_analysis_index == c_analysisList.getItemCount() - 1)
+                AddCurrentItem(new_analysis_name);
+            else
+                RenameCurrentItem(new_analysis_name);
 
-                ComboBoxModel<String> list = c_analysisList.getModel();
-                for (int i = 0; count < 2 && i < list.getSize(); i++)
-                    if (list.getElementAt(i).equals(new_analysis_name))
-                        count++;
-
-                if (count <= 1) {
-                    c_analysisList.removeItemAt(selected_analysis_index);
-                    c_analysisList.insertItemAt(new_analysis_name, selected_analysis_index);
-                    analyses.renameSelectedAnalysis(new_analysis_name);
-                    c_analysisList.setEditable(false);
-
-                }
-            }
             selected_analysis_index = 0;
             return true;
         }
         else
-            new Display_Message("Error", "Ensure the analysis name is not empty, less than 256 "
+            new DisplayMessage("Error", "Ensure the analysis name is not empty, less than 256 "
                     + "characters and contains valid ASCII characters");
 
         return false;
+    }
+
+    void RenameCurrentItem(String new_analysis_name) {
+        int count = 0;
+
+        ComboBoxModel<String> list = c_analysisList.getModel();
+        for (int i = 0; count < 2 && i < list.getSize(); i++)
+            if (list.getElementAt(i).equals(new_analysis_name))
+                count++;
+
+        if (count <= 1) {
+            c_analysisList.removeItemAt(selected_analysis_index);
+            c_analysisList.insertItemAt(new_analysis_name, selected_analysis_index);
+            analyses.renameSelectedAnalysis(new_analysis_name);
+            c_analysisList.setEditable(false);
+
+        }
+    }
+
+    void AddCurrentItem(String new_analysis_name) {
+        AnalysisMember member = new AnalysisMember();
+        member.setAnalysisName(new_analysis_name);
+        analyses.addAnalysis(member);
+        c_analysisList.insertItemAt(new_analysis_name, 0);
+        c_analysisList.setEditable(false);
     }
 
     boolean ValidateAnalysisName(String name) {
@@ -207,21 +214,21 @@ public class SettingsWindow extends JPanel implements ActionListener {
     }
 
     static void UpdateSelectedGeneSets(JList <String> list) {
-        AnalysisMember analysis = analyses.getCurrentAnalysis();
+        AnalysisMember member = analyses.getCurrentAnalysis();
         List<Pair<String, List<String>>> all_genesets = analyses.getAllGeneSets();
         ListModel<String> model = list.getModel();
 
-        if(analysis.hasGeneSet())
-            analysis.clear();
+        if(member.hasGeneSet())
+            member.clear();
 
         for (Pair<String, List<String>> gene_set : all_genesets) {
             for (int i = 0; i < model.getSize(); i++)
                 if (model.getElementAt(i).equals(gene_set.getKey()))
-                    analysis.addGeneSet(gene_set);
+                    member.addGeneSet(gene_set);
         }
 
-        if (!analyses.doesExist(analysis))
-            analyses.addAnalysis(analysis);
+        if (!analyses.doesExist(member))
+            analyses.addAnalysis(member);
 
         ListModel element = list.getModel();
         listModel.clear();
@@ -235,8 +242,8 @@ public class SettingsWindow extends JPanel implements ActionListener {
         c_analysisList.addItem("Add Item...");
 
         if (analyses.getCount() > 0) {
-            for (AnalysisMember mem : analyses.getAnalyses())
-                c_analysisList.insertItemAt(mem.getAnalysisName(), 0);
+            for (AnalysisMember member : analyses.getAnalyses())
+                c_analysisList.insertItemAt(member.getAnalysisName(), 0);
 
             c_analysisList.setEditable(false);
         } else
@@ -250,7 +257,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
             @Override
             public void keyReleased(KeyEvent event) {
                 if (event.getKeyChar() == KeyEvent.VK_ENTER)
-                    AddCurrentItem();
+                    ModifyCurrentItem();
                 else if (event.getKeyChar() == KeyEvent.VK_ESCAPE)
                     c_analysisList.setEditable(false);
             }
@@ -284,10 +291,10 @@ public class SettingsWindow extends JPanel implements ActionListener {
                     c_analysisList.setEditable(true);
                 } else {
                     c_analysisList.setEditable(false);
-                    AnalysisMember mem = analyses.setCurrentAnalysis((String)c_analysisList.getSelectedItem());
+                    AnalysisMember member = analyses.setCurrentAnalysis((String)c_analysisList.getSelectedItem());
 
-                    if (mem != null && mem.hasGeneSet())
-                        for (Pair<String, List<String>> gene_set : mem.getGeneSets())
+                    if (member != null && member.hasGeneSet())
+                        for (Pair<String, List<String>> gene_set : member.getGeneSets())
                             listModel.add(gene_set.getKey());
                 }
                 selected_analysis_index = c_analysisList.getSelectedIndex();
@@ -296,9 +303,9 @@ public class SettingsWindow extends JPanel implements ActionListener {
 
         b_select_genesets.addActionListener(e -> {
             if (c_analysisList.isEditable())
-                AddCurrentItem();
+                ModifyCurrentItem();
 
-            new GeneSelector(analyses);
+            new GeneSetSelector(analyses);
         });
 
         b_load.addActionListener(e -> {
@@ -315,7 +322,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
             int selected_index = c_analysisList.getSelectedIndex();
 
             if (selected_index != c_analysisList.getItemCount() - 1) {
-                Display_Message message = new Display_Message("prompt", "Are you sure you would like to delete: ".concat((String) c_analysisList.getItemAt(selected_index)));
+                DisplayMessage message = new DisplayMessage("prompt", "Are you sure you would like to delete: ".concat((String) c_analysisList.getItemAt(selected_index)));
                 if (message.getResponse() == JOptionPane.OK_OPTION) {
                     pending_changes = true;
 
@@ -327,12 +334,12 @@ public class SettingsWindow extends JPanel implements ActionListener {
                         c_analysisList.setEditable(false);
                 }
             } else
-                new Display_Message("disclaimer", "Cannot delete this item");
+                new DisplayMessage("disclaimer", "Cannot delete this item");
         });
 
         b_close.addActionListener(e -> {
             if (pending_changes) {
-                Display_Message prompt = new Display_Message("Prompt", "Would you like to save?");
+                DisplayMessage prompt = new DisplayMessage("Prompt", "Would you like to save?");
 
                 if (prompt.getResponse() == JOptionPane.OK_OPTION) {
 
@@ -370,25 +377,5 @@ public class SettingsWindow extends JPanel implements ActionListener {
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-    }
-}
-
-class NoSelectionModel extends DefaultListSelectionModel {
-
-    @Override
-    public void setAnchorSelectionIndex(final int anchorIndex) {
-    }
-
-    @Override
-    public void setLeadAnchorNotificationEnabled(final boolean flag) {
-    }
-
-    @Override
-    public void setLeadSelectionIndex(final int leadIndex) {
-    }
-
-    @Override
-    public void setSelectionInterval(final int index0, final int index1) {
-    }
+    public void actionPerformed(ActionEvent e) {}
 }

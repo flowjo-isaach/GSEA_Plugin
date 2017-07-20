@@ -50,7 +50,6 @@ public class GSEAManager {
             try {
                 String line = null;
                 String geneset_name = null;
-                boolean add_last_analysis = false;
 
                 FileReader reader = new FileReader(new File("./plugins/GSEA/" + chooser.getSelectedFile().getName()));
 
@@ -90,22 +89,7 @@ public class GSEAManager {
 
                     analyses.addAnalysis(analysis);
                 }
-//                while ((analysis_name = in_stream.readLine()) != null && analysis_regex.matcher(analysis_name).find()) {
-//                    AnalysisMember analysis = new AnalysisMember();
-//                    analysis_name = analysis_name.replaceAll("[\\[\\]]", "");
-//                    analysis.setAnalysisName(analysis_name);
-//
-//                    while ((geneset_name = in_stream.readLine()) != null && !analysis_regex.matcher(geneset_name).find() && geneset_regex.matcher(geneset_name).find()) {
-//                        List<String> gene_list = new ArrayList<>();
-//                        geneset_name = geneset_name.replaceAll("[\\(\\)]", "");
-//
-//                        while ((gene_name = in_stream.readLine()) != null && !geneset_regex.matcher(gene_name).find() && !analysis_regex.matcher(gene_name).find())
-//                            gene_list.add(gene_name);
-//
-//                        analysis.addGeneSet(new Pair<>(geneset_name, gene_list));
-//                    }
-//                    analyses.addAnalysis(analysis);
-//                }
+
                 return true;
 
             } catch (IOException e1) {

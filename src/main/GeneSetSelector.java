@@ -8,7 +8,7 @@ import java.awt.*;
 /**
  * Created by Isaac on 7/11/2017.
  */
-public class GeneSelector {
+public class GeneSetSelector {
     private static SortedListModel list_selected_sets;
     private static SortedListModel list_all_sets;
     private static JList<String> selected_genesets;
@@ -36,7 +36,7 @@ public class GeneSelector {
     private static JButton b_select;
     private static JButton b_cancel;
 
-    GeneSelector(Analyses analyses) {
+    GeneSetSelector(Analyses analyses) {
         this.analyses = analyses;
         f_main = new JFrame();
         d_main = new JDialog(f_main, "Gene Set Selector", true);
