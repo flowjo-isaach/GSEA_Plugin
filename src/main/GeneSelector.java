@@ -15,6 +15,7 @@ public class GeneSelector {
     private static JList<String> all_genesets;
     private Analyses analyses;
 
+    //Swing components
     private static JFrame f_main;
     private static JPanel p_main;
     private static JDialog d_main;

@@ -23,7 +23,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
     private static SortedListModel listModel = new SortedListModel();
     private static JList<String> selected_genesets = new JList<>(listModel);
     private static int selected_analysis_index;
-    private boolean pending_changes = false;
+    private static boolean pending_changes = false;
     private static Analyses analyses;
     private static GSEAManager gsea_man;
 
@@ -167,7 +167,6 @@ public class SettingsWindow extends JPanel implements ActionListener {
                 analyses.addAnalysis(analysis);
                 c_analysisList.insertItemAt(new_analysis_name, 0);
                 c_analysisList.setEditable(false);
-                return true;
                 //else rename current item
             } else {
                 int count = 0;
@@ -182,16 +181,17 @@ public class SettingsWindow extends JPanel implements ActionListener {
                     c_analysisList.insertItemAt(new_analysis_name, selected_analysis_index);
                     analyses.renameSelectedAnalysis(new_analysis_name);
                     c_analysisList.setEditable(false);
-                    return true;
+
                 }
             }
             selected_analysis_index = 0;
-
-            return false;
+            return true;
         }
         else
             new Display_Message("Error", "Ensure the analysis name is not empty, less than 256 "
                     + "characters and contains valid ASCII characters");
+
+        return false;
     }
 
     boolean ValidateAnalysisName(String name) {
@@ -237,12 +237,12 @@ public class SettingsWindow extends JPanel implements ActionListener {
         if (analyses.getCount() > 0) {
             for (AnalysisMember mem : analyses.getAnalyses())
                 c_analysisList.insertItemAt(mem.getAnalysisName(), 0);
+
             c_analysisList.setEditable(false);
         } else
             c_analysisList.setEditable(true);
 
         c_analysisList.setSelectedIndex(0);
-
     }
 
     private void SetupListeners() {
@@ -278,24 +278,18 @@ public class SettingsWindow extends JPanel implements ActionListener {
 
         c_analysisList.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED && c_analysisList.getSelectedIndex() != -1) {
-
+                listModel.clear();
                 //if "Add item..." is selected
                 if (c_analysisList.getSelectedIndex() == c_analysisList.getItemCount() - 1) {
-                    listModel.clear();
                     c_analysisList.setEditable(true);
-                    c_analysisList.grabFocus();
                 } else {
                     c_analysisList.setEditable(false);
-                    analyses.setCurrentAnalysis((String) c_analysisList.getSelectedItem());
-                    AnalysisMember mem = analyses.getCurrentAnalysis();
+                    AnalysisMember mem = analyses.setCurrentAnalysis((String)c_analysisList.getSelectedItem());
 
-                    listModel.clear();
-
-                    if (mem.hasGeneSet())
+                    if (mem != null && mem.hasGeneSet())
                         for (Pair<String, List<String>> gene_set : mem.getGeneSets())
                             listModel.add(gene_set.getKey());
                 }
-
                 selected_analysis_index = c_analysisList.getSelectedIndex();
             }
         });

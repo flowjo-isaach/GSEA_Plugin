@@ -1,8 +1,8 @@
 package main;
 
 import com.flowjo.lib.parameters.ParameterSetInterface;
-import javafx.util.Pair;
 
+import javafx.util.Pair;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -13,35 +13,28 @@ import java.util.List;
 public class Analyses {
     private static Analyses singleton = null;
     private static List<AnalysisMember> analyses;
-    private static List<Pair<String, List<String>>> all_gene_sets = new ArrayList<>();
-    private AnalysisMember current_analysis = null;
+    private static List<Pair<String, List<String>>> all_gene_sets;
+    private AnalysisMember current_analysis;
 
     private Analyses(Collection<ParameterSetInterface> allParams) {
         analyses = new ArrayList<>();
+        all_gene_sets = new ArrayList<>();
+        current_analysis = null;
         initializeGeneSets(allParams);
     }
+
     static Analyses getInstance(Collection<ParameterSetInterface> allGenes) {
-        if(singleton == null)
+        if (singleton == null)
             singleton = new Analyses(allGenes);
 
         return singleton;
     }
 
-    private void initializeGeneSets(Collection<ParameterSetInterface> allGenes) {
-
-        //ensure program is in it's first run
-        if(this.getCount() == 0) {
-            for (ParameterSetInterface set : allGenes) {
-                if (!set.getName().equals("All"))
-                    this.addGeneSet(new Pair<>(set.getName(), set.getParameterNames()));
-            }
-        }
-    }
-
-    AnalysisMember getCurrentAnalysis() {return current_analysis;}
-    List<AnalysisMember> getAnalyses() {return analyses;}
     int getCount() {return analyses.size();}
+    List<AnalysisMember> getAnalyses() {return analyses;}
+    AnalysisMember getCurrentAnalysis() {return current_analysis;}
     List<Pair<String, List<String>>> getAllGeneSets() {return all_gene_sets;}
+
     String getCurrentAnalysisName() {
         if(current_analysis != null)
             return current_analysis.getAnalysisName();
@@ -54,6 +47,7 @@ public class Analyses {
         current_analysis = member;
     }
     void addGeneSet(Pair<String, List<String>> pr) {all_gene_sets.add(pr);}
+
     boolean renameSelectedAnalysis(String newAnalysisName) {
         for (AnalysisMember mem : analyses) {
             if (mem.getAnalysisName().equals(getCurrentAnalysisName())) {
@@ -64,19 +58,20 @@ public class Analyses {
         return false;
     }
 
-    boolean setCurrentAnalysis(String analysis_name) {
+    AnalysisMember setCurrentAnalysis(String analysis_name) {
         for(AnalysisMember analysis: analyses) {
             if(analysis_name.equals(analysis.getAnalysisName())) {
                 current_analysis = analysis;
-                return true;
+                return analysis;
             }
         }
-        return false;
+        return null;
     }
 
     boolean doesExist(AnalysisMember member) {
         for(AnalysisMember analysis: analyses)
-            if(member.equals(analysis)) {return true;}
+            if(member.equals(analysis))
+                return true;
 
         return false;
     }
@@ -91,4 +86,15 @@ public class Analyses {
     }
 
     void clear() { analyses.clear(); }
+
+    private void initializeGeneSets(Collection<ParameterSetInterface> allGenes) {
+
+        //ensure program is in it's first run
+        if(this.getCount() == 0) {
+            for (ParameterSetInterface set : allGenes) {
+                if (!set.getName().equals("All"))
+                    this.addGeneSet(new Pair<>(set.getName(), set.getParameterNames()));
+            }
+        }
+    }
 }
