@@ -1,17 +1,13 @@
 package main;
 
 import com.flowjo.lib.parameters.*;
-import com.treestar.lib.PluginHelper;
-import com.treestar.lib.xml.SElement;
 import javafx.util.Pair;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.http.client.methods.HttpPost;
 
 import java.awt.event.*;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
-import java.net.URISyntaxException;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,12 +21,13 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class SettingsWindow extends JPanel implements ActionListener {
 
     private static SortedListModel listModel = new SortedListModel();
-    private ParameterSetMgrInterface parameterSetManager;
     private static JList<String> selected_genesets = new JList<>(listModel);
     private static int selected_analysis_index;
     private boolean pending_changes = false;
     private static Analyses analyses;
     private static GSEAManager gsea_man;
+
+    //Swing components
     private static JFrame f_main;
     private static JPanel p_main;
     private static JDialog d_main;
@@ -46,14 +43,11 @@ public class SettingsWindow extends JPanel implements ActionListener {
     private static JButton b_close;
     private static GridBagConstraints cons_main;
 
-    SettingsWindow(SElement fcmlQueryElement) {
-        gsea_man = new GSEAManager();
+    SettingsWindow(Collection<ParameterSetInterface> allParams) {
+        analyses = Analyses.getInstance(allParams);
+        gsea_man = new GSEAManager(analyses);
         f_main = new JFrame();
-        analyses = Analyses.getInstance();
         f_main.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        parameterSetManager = PluginHelper.getParameterSetMgr(fcmlQueryElement);
-
-        initializeGeneSets();
 
         d_main = new JDialog(f_main, "Gene Set Enrichment Analysis", true);
         d_main.setMinimumSize(new Dimension(550, 375));
@@ -160,60 +154,65 @@ public class SettingsWindow extends JPanel implements ActionListener {
         d_main.setVisible(true);
     }
 
-    private boolean AddCurrentItem(JComboBox cbox) {
-        boolean retval = false;
-        String new_analysis_name = (String) cbox.getEditor().getItem();
+    private boolean AddCurrentItem() {
+        String new_analysis_name = (String) c_analysisList.getEditor().getItem();
 
-        //Ensure field is not empty
-        if (new_analysis_name != null && !new_analysis_name.isEmpty() && new_analysis_name.length() < 256 && new_analysis_name.chars().allMatch(c -> c < 256)) {
-//            analyses.setNewAnalysisName(new_analysis_name);
+        if (ValidateAnalysisName(new_analysis_name)) {
+            pending_changes = true;
 
-            //ensure the name in the text field is not equal to the "Add item..." option
-            if (!new_analysis_name.equals(cbox.getItemAt(cbox.getItemCount() - 1))) {
-                //if item selected is "add item..." add item
-                if (selected_analysis_index == cbox.getItemCount() - 1) {
-                    AnalysisMember analysis = new AnalysisMember();
-                    analysis.setAnalysisName(new_analysis_name);
-                    analyses.addAnalysis(analysis);
-                    cbox.insertItemAt(new_analysis_name, 0);
-                    cbox.setEditable(false);
-                    retval = true;
-                    //else rename current item
-                } else {
-                    int count = 0;
+            //if item selected is "add item..." add item
+            if (selected_analysis_index == c_analysisList.getItemCount() - 1) {
+                AnalysisMember analysis = new AnalysisMember();
+                analysis.setAnalysisName(new_analysis_name);
+                analyses.addAnalysis(analysis);
+                c_analysisList.insertItemAt(new_analysis_name, 0);
+                c_analysisList.setEditable(false);
+                return true;
+                //else rename current item
+            } else {
+                int count = 0;
 
-                    ComboBoxModel<String> list = cbox.getModel();
-                    for (int i = 0; count < 2 && i < list.getSize(); i++)
-                        if (list.getElementAt(i).equals(new_analysis_name))
-                            count++;
+                ComboBoxModel<String> list = c_analysisList.getModel();
+                for (int i = 0; count < 2 && i < list.getSize(); i++)
+                    if (list.getElementAt(i).equals(new_analysis_name))
+                        count++;
 
-                    if (count <= 1) {
-                        cbox.removeItemAt(selected_analysis_index);
-                        cbox.insertItemAt(new_analysis_name, selected_analysis_index);
-                        analyses.renameSelectedAnalysis(new_analysis_name);
-                        cbox.setEditable(false);
-                        retval = true;
-                    }
-                    //this code is not reachable for an unknown reason. It appears JComboBox doesn't allow duplicate entries
-//                    else {
-//                        new Display_Message("Disclaimer", "\"".concat(new_analysis_name.concat("\" already exists")));
-//                    }
+                if (count <= 1) {
+                    c_analysisList.removeItemAt(selected_analysis_index);
+                    c_analysisList.insertItemAt(new_analysis_name, selected_analysis_index);
+                    analyses.renameSelectedAnalysis(new_analysis_name);
+                    c_analysisList.setEditable(false);
+                    return true;
                 }
-                selected_analysis_index = 0;
-            } else
-                new Display_Message("Disclaimer", "\"".concat(new_analysis_name.concat("\" is not valid")));
-        } else
-            new Display_Message("Error", "Analysis name invalid, ensure it's no longer than 256 characters long and valid ASCII characters");
+            }
+            selected_analysis_index = 0;
 
-        return retval;
+            return false;
+        }
+        else
+            new Display_Message("Error", "Ensure the analysis name is not empty, less than 256 "
+                    + "characters and contains valid ASCII characters");
     }
 
-    static void UpdateSelectedGeneSets(JList<String> list) {
+    boolean ValidateAnalysisName(String name) {
+        //Ensure field is not empty
+        if (name != null && !name.isEmpty())
+            //Ensure length is less than 256 characters and contain valid ascii characters
+            if(name.length() < 256 && name.chars().allMatch(c -> c < 256))
+                //ensure the name in the text field is not equal to the "Add item..." option
+                if (!name.equals(c_analysisList.getItemAt(c_analysisList.getItemCount() - 1)))
+                    return true;
+
+        return false;
+    }
+
+    static void UpdateSelectedGeneSets(JList <String> list) {
         AnalysisMember analysis = analyses.getCurrentAnalysis();
         List<Pair<String, List<String>>> all_genesets = analyses.getAllGeneSets();
         ListModel<String> model = list.getModel();
 
-        analysis.clear();
+        if(analysis.hasGeneSet())
+            analysis.clear();
 
         for (Pair<String, List<String>> gene_set : all_genesets) {
             for (int i = 0; i < model.getSize(); i++)
@@ -228,38 +227,6 @@ public class SettingsWindow extends JPanel implements ActionListener {
         listModel.clear();
         for (int i = 0; i < element.getSize(); i++) {
             listModel.add(element.getElementAt(i));
-        }
-    }
-
-    private void initializeGeneSets() {
-
-        //ensure program is in it's first run
-        if(analyses.getCount() == 0) {
-            for (ParameterSetInterface set : parameterSetManager.getAllParameterSets()) {
-                if (!set.getName().equals("All"))
-                    analyses.addGeneSet(new Pair<>(set.getName(), set.getParameterNames()));
-            }
-        }
-    }
-
-    private void SendEnrichrRequest(List<String> all_genes) {
-        Enricher_Request enricher = null;
-        try {
-            enricher = new Enricher_Request();
-        } catch (IOException | UrlUnavailableException e1) {
-            e1.printStackTrace();
-        }
-
-        //Add genes for enrichr request
-        for (String gene : all_genes)
-            enricher.add_gene(gene);
-
-        HttpPost request = enricher.prepare_request(analyses.getCurrentAnalysisName());
-        try {
-            if (request != null)
-                enricher.send_request(request);
-        } catch (IOException | UrlUnavailableException | URISyntaxException e1) {
-            e1.printStackTrace();
         }
     }
 
@@ -283,7 +250,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
             @Override
             public void keyReleased(KeyEvent event) {
                 if (event.getKeyChar() == KeyEvent.VK_ENTER)
-                    AddCurrentItem(c_analysisList);
+                    AddCurrentItem();
                 else if (event.getKeyChar() == KeyEvent.VK_ESCAPE)
                     c_analysisList.setEditable(false);
             }
@@ -318,15 +285,15 @@ public class SettingsWindow extends JPanel implements ActionListener {
                     c_analysisList.setEditable(true);
                     c_analysisList.grabFocus();
                 } else {
+                    c_analysisList.setEditable(false);
                     analyses.setCurrentAnalysis((String) c_analysisList.getSelectedItem());
                     AnalysisMember mem = analyses.getCurrentAnalysis();
 
-                    if (mem != null) {
-                        listModel.clear();
+                    listModel.clear();
 
+                    if (mem.hasGeneSet())
                         for (Pair<String, List<String>> gene_set : mem.getGeneSets())
                             listModel.add(gene_set.getKey());
-                    }
                 }
 
                 selected_analysis_index = c_analysisList.getSelectedIndex();
@@ -335,9 +302,8 @@ public class SettingsWindow extends JPanel implements ActionListener {
 
         b_select_genesets.addActionListener(e -> {
             if (c_analysisList.isEditable())
-                AddCurrentItem(c_analysisList);
+                AddCurrentItem();
 
-            pending_changes = true;
             new GeneSelector(analyses);
         });
 
@@ -349,7 +315,6 @@ public class SettingsWindow extends JPanel implements ActionListener {
         b_rename.addActionListener(e -> {
             c_analysisList.setEditable(true);
             c_analysisList.requestFocus();
-            pending_changes = true;
         });
 
         b_delete.addActionListener(e -> {
@@ -376,6 +341,11 @@ public class SettingsWindow extends JPanel implements ActionListener {
                 Display_Message prompt = new Display_Message("Prompt", "Would you like to save?");
 
                 if (prompt.getResponse() == JOptionPane.OK_OPTION) {
+
+                    File dir = new File("./plugins/GSEA/");
+                    if (!dir.exists())
+                        dir.mkdirs();
+
                     JFileChooser chooser = new JFileChooser();
                     FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV files", "csv");
                     chooser.setFileFilter(filter);
@@ -394,7 +364,6 @@ public class SettingsWindow extends JPanel implements ActionListener {
         b_submit.addActionListener(e -> {
             List<Pair<String, List<String>>> all_genesets = analyses.getAllGeneSets();
             List<String> all_genes = new ArrayList<>();
-//            ListModel<String> model = selected_genesets.getModel();
 
             for (Pair<String, List<String>> geneset : all_genesets) {
                 for (int i = 0; i < listModel.getSize(); i++) {
@@ -402,7 +371,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
                         all_genes = Stream.concat(all_genes.stream(), geneset.getValue().stream()).collect(Collectors.toList());
                 }
             }
-            SendEnrichrRequest(all_genes);
+            gsea_man.SendEnrichrRequest(all_genes);
         });
     }
 

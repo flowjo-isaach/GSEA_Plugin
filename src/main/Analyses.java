@@ -1,8 +1,10 @@
 package main;
 
+import com.flowjo.lib.parameters.ParameterSetInterface;
 import javafx.util.Pair;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -14,12 +16,26 @@ public class Analyses {
     private static List<Pair<String, List<String>>> all_gene_sets = new ArrayList<>();
     private AnalysisMember current_analysis = null;
 
-    private Analyses() { analyses = new ArrayList<>(); }
-    static Analyses getInstance() {
+    private Analyses(Collection<ParameterSetInterface> allParams) {
+        analyses = new ArrayList<>();
+        initializeGeneSets(allParams);
+    }
+    static Analyses getInstance(Collection<ParameterSetInterface> allGenes) {
         if(singleton == null)
-            singleton = new Analyses();
+            singleton = new Analyses(allGenes);
 
         return singleton;
+    }
+
+    private void initializeGeneSets(Collection<ParameterSetInterface> allGenes) {
+
+        //ensure program is in it's first run
+        if(this.getCount() == 0) {
+            for (ParameterSetInterface set : allGenes) {
+                if (!set.getName().equals("All"))
+                    this.addGeneSet(new Pair<>(set.getName(), set.getParameterNames()));
+            }
+        }
     }
 
     AnalysisMember getCurrentAnalysis() {return current_analysis;}

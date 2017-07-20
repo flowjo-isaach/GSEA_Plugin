@@ -10,11 +10,11 @@ import java.util.List;
  */
 class AnalysisMember {
     private String AnalysisName;
-    private List<Pair<String, List<String>>> gene_sets = new ArrayList<>();
+    private List<Pair<String, List<String>>> gene_sets;
 
     AnalysisMember() {
         AnalysisName = null;
-        System.out.println("genesets added: null");
+        gene_sets = new ArrayList<>();
         addGeneSet(null);
     }
     String getAnalysisName() {return AnalysisName;}
@@ -22,13 +22,12 @@ class AnalysisMember {
 
     void setAnalysisName(String analysisName) {AnalysisName = analysisName;}
     void addGeneSet(Pair<String, List<String>> gene_set) {
-        if(gene_sets.contains(null)) {
-            System.out.println("null removed");
+        if(!hasGeneSet())
             gene_sets.remove(null);
-        }
 
         gene_sets.add(gene_set);
     }
 
+    boolean hasGeneSet() { return !gene_sets.contains(null) ? true : false; }
     void clear() {gene_sets.clear();}
 }

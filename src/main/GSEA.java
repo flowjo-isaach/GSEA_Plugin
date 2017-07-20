@@ -2,9 +2,13 @@ package main;
 
 import java.lang.String;
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import javax.swing.*;
 
+import com.flowjo.lib.parameters.ParameterSetInterface;
+import com.flowjo.lib.parameters.ParameterSetMgrInterface;
+import com.treestar.lib.PluginHelper;
 import com.treestar.lib.core.ExportFileTypes;
 import com.treestar.lib.core.ExternalAlgorithmResults;
 import com.treestar.lib.core.PopulationPluginInterface;
@@ -35,7 +39,14 @@ public class GSEA implements PopulationPluginInterface
 
     @Override
     public boolean promptForOptions(SElement fcmlQueryElement, List<String> parameterNames) {
-        new SettingsWindow(fcmlQueryElement);
+
+        //collects all the genes from the workstation
+        ParameterSetMgrInterface parameterSetManager = PluginHelper.getParameterSetMgr(fcmlQueryElement);
+        Collection<ParameterSetInterface> allGenes = parameterSetManager.getAllParameterSets();
+
+        new SettingsWindow(allGenes);
+
+        //returns false to prevent creating node in SeqGeq. This also prevents calling invokeAlgorithm()
         return false;
     }
 
