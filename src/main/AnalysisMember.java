@@ -22,5 +22,5 @@ class AnalysisMember {
     void setAnalysisName(String analysisName) {AnalysisName = analysisName;}
     void addGeneSet(Pair<String, List<String>> gene_set) { gene_sets.add(gene_set); }
     boolean hasGeneSet() { return gene_sets.size() != 0; }
-    void clear() {gene_sets.clear();}
+    void clearGeneSets() {gene_sets.clear();}
 }

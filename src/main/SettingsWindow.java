@@ -145,8 +145,8 @@ public class SettingsWindow extends JPanel implements ActionListener {
         cons_main.insets = new Insets(0, 0, 15, 15);
         p_main.add(b_submit, cons_main);
 
-        UpdateComboList();
-        SetupListeners();
+        updateComboList();
+        setupListeners();
 
         d_main.add(p_main);
         d_main.pack();
@@ -156,17 +156,17 @@ public class SettingsWindow extends JPanel implements ActionListener {
         d_main.setVisible(true);
     }
 
-    private boolean ModifyCurrentItem() {
+    private boolean modifyCurrentItem() {
         String new_analysis_name = (String) c_analysisList.getEditor().getItem();
 
-        if (ValidateAnalysisName(new_analysis_name)) {
+        if (validateAnalysisName(new_analysis_name)) {
             pending_changes = true;
 
             //if item selected is "add item..." add item
             if (selected_analysis_index == c_analysisList.getItemCount() - 1)
-                AddCurrentItem(new_analysis_name);
+                addCurrentItem(new_analysis_name);
             else
-                RenameCurrentItem(new_analysis_name);
+                renameCurrentItem(new_analysis_name);
 
             selected_analysis_index = 0;
             return true;
@@ -178,7 +178,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
         return false;
     }
 
-    private void RenameCurrentItem(String new_analysis_name) {
+    private void renameCurrentItem(String new_analysis_name) {
         int count = 0;
 
         ComboBoxModel<String> list = c_analysisList.getModel();
@@ -195,7 +195,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
         }
     }
 
-    private void AddCurrentItem(String new_analysis_name) {
+    private void addCurrentItem(String new_analysis_name) {
         AnalysisMember member = new AnalysisMember();
         member.setAnalysisName(new_analysis_name);
         analyses.addAnalysis(member);
@@ -203,7 +203,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
         c_analysisList.setEditable(false);
     }
 
-    private boolean ValidateAnalysisName(String name) {
+    private boolean validateAnalysisName(String name) {
         //Ensure field is not empty
         if (name != null && !name.isEmpty())
             //Ensure length is less than 256 characters and contain valid ascii characters
@@ -215,7 +215,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
         return false;
     }
 
-    private void UpdateComboList() {
+    private void updateComboList() {
         c_analysisList.removeAllItems();
         c_analysisList.addItem("Add Item...");
 
@@ -230,12 +230,12 @@ public class SettingsWindow extends JPanel implements ActionListener {
         c_analysisList.setSelectedIndex(0);
     }
 
-    private void SetupListeners() {
+    private void setupListeners() {
         c_analysisList.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent event) {
                 if (event.getKeyChar() == KeyEvent.VK_ENTER)
-                    ModifyCurrentItem();
+                    modifyCurrentItem();
                 else if (event.getKeyChar() == KeyEvent.VK_ESCAPE)
                     c_analysisList.setEditable(false);
             }
@@ -281,15 +281,17 @@ public class SettingsWindow extends JPanel implements ActionListener {
 
         b_select_genesets.addActionListener(e -> {
             if (c_analysisList.isEditable())
-                ModifyCurrentItem();
+                modifyCurrentItem();
 
             new GeneSetSelector(analyses);
         });
 
         b_load.addActionListener(e -> {
             try {
-                if(gsea_man.LoadCSV())
-                    UpdateComboList();
+                if(gsea_man.loadCSV())
+                    updateComboList();
+            } catch (FileNotFoundException e1) {
+                new DisplayMessage("Error", "Selected file not valid");
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
@@ -338,7 +340,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
                         String filename = chooser.getSelectedFile().getName();
                         filename = FilenameUtils.removeExtension(filename);
                         try {
-                            gsea_man.SaveCSV(filename);
+                            gsea_man.saveCSV(filename);
                         } catch (IOException e1) {
                             e1.printStackTrace();
                         }
@@ -359,7 +361,7 @@ public class SettingsWindow extends JPanel implements ActionListener {
                 }
             }
             try {
-                if(!gsea_man.SendEnrichrRequest(all_genes))
+                if(!gsea_man.performRequest(all_genes))
                     new DisplayMessage("Error", "Failed to send Request");
             } catch (IOException | URISyntaxException e1) {
                 e1.printStackTrace();
@@ -368,13 +370,13 @@ public class SettingsWindow extends JPanel implements ActionListener {
         });
     }
 
-    static void UpdateSelectedGeneSets(JList <String> list) {
+    static void updateSelectedGeneSets(JList <String> list) {
         AnalysisMember member = analyses.getCurrentAnalysis();
         List<Pair<String, List<String>>> all_genesets = analyses.getAllGeneSets();
         ListModel<String> model = list.getModel();
 
         if(member.hasGeneSet())
-            member.clear();
+            member.clearGeneSets();
 
         for (Pair<String, List<String>> gene_set : all_genesets) {
             for (int i = 0; i < model.getSize(); i++)

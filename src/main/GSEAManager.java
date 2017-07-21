@@ -16,6 +16,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import com.google.gson.Gson;
 import javafx.util.Pair;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -26,7 +27,7 @@ import org.apache.http.util.EntityUtils;
 
 class GSEAManager {
     private Analyses analyses;
-    private StringJoiner genes;
+
     private final static int MAX_GENE_LENGTH = 64;
     final private static int GOOD_RESPONSE = 200;
     private static CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -35,21 +36,16 @@ class GSEAManager {
     private static String resulting_url = "http://amp.pharm.mssm.edu/Enrichr/enrich?dataset=";
 
     /**
-     * @param analyses
-     *  description: Analyses object used for storing every analysis and their gene sets including their genes
+     * @param analyses Analyses object used for storing every analysis
+     *                 and their gene sets including their genes
      */
-    GSEAManager(Analyses analyses) {
-        this.analyses = analyses;
-        this.genes = new StringJoiner("\n");
-    }
+    GSEAManager(Analyses analyses) { this.analyses = analyses; }
 
     /**
-     * @param filename
-     *  description: name of file the user would like to save
-     * @throws IOException
-     *  description: Thrown from FileWriter
+     * @param filename name of file the user would like to save
+     * @throws IOException Thrown from FileWriter
      */
-    void SaveCSV(String filename) throws IOException {
+    void saveCSV(String filename) throws IOException {
         FileWriter writer = null;
 
         writer = new FileWriter("./plugins/GSEA/" + filename + ".csv");
@@ -70,10 +66,9 @@ class GSEAManager {
 
     /**
      * @return boolean
-     * @throws IOException
-     *  Thrown from ValidateCSV and PopulationAnalyses
+     * @throws IOException Thrown from validateCSV and PopulationAnalyses
      */
-    boolean LoadCSV() throws IOException {
+    boolean loadCSV() throws IOException {
         JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV files", "csv");
         chooser.setCurrentDirectory(new File("./plugins/GSEA/"));
@@ -84,8 +79,8 @@ class GSEAManager {
         if (chooser.showOpenDialog(chooser.getParent()) == JFileChooser.APPROVE_OPTION) {
             File file = new File("./plugins/GSEA/" + chooser.getSelectedFile().getName());
 
-            if(ValidateCSV(file)) {
-                PopulateAnalyses(file);
+            if(validateCSV(file)) {
+                populateAnalyses(file);
                 return true;
             } else
                 new DisplayMessage("Error", "The file selected is not valid");
@@ -94,12 +89,43 @@ class GSEAManager {
     }
 
     /**
-     * @param file
-     *  description: CSV file used for loading previous session
-     * @throws IOException
-     *  description: thrown from BufferedReader
+     * @param file CSV file used for loading previous session
+     * @return boolean
+     * @throws IOException thrown by FileReader and BufferedReader
      */
-    private void PopulateAnalyses(File file) throws IOException {
+    private boolean validateCSV(File file) throws IOException {
+        //Checks the file extension to ensure its valid
+        if(!FilenameUtils.getExtension(file.getName()).toLowerCase().equals("csv")) return false;
+        FileReader reader = new FileReader(file);
+        BufferedReader in_stream = new BufferedReader(reader);
+        Pattern analysis_regex = Pattern.compile("\\[(.+)\\]");
+        Pattern geneset_regex = Pattern.compile("\\((.+)\\)");
+        String line = null;
+
+        if((line = in_stream.readLine()) != null) {
+            //check to make sure the first line is an analysis name e.g [analysisname]
+            if (!analysis_regex.matcher(line).find()) return false;
+
+            do {
+                if (line.length() > MAX_GENE_LENGTH) return false;
+
+                if (analysis_regex.matcher(line).find()) {
+                    if ((line = in_stream.readLine()) != null) {
+                        if (line.length() > MAX_GENE_LENGTH) return false;
+                        //if an analysis name was parsed and a geneset exists ensure it's the very next line
+                        if (!geneset_regex.matcher(line).find()) return false;
+                    }
+                }
+            } while ((line = in_stream.readLine()) != null);
+        }
+        return true;
+    }
+
+    /**
+     * @param file CSV file used for loading previous session
+     * @throws IOException description: thrown from BufferedReader
+     */
+    private void populateAnalyses(File file) throws IOException {
         FileReader reader = new FileReader(file);
         BufferedReader in_stream = new BufferedReader(reader);
         Pattern analysis_regex = Pattern.compile("\\[(.+)\\]");
@@ -150,76 +176,24 @@ class GSEAManager {
     }
 
     /**
-     * @param file
-     *  description: CSV file used for loading previous session
+     * @param all_genes List of genes for Enrichr request
      * @return boolean
-     * @throws IOException
-     *  description: thrown by FileReader and BufferedReader
+     * @throws IOException sendRequest throws this exception
+     * @throws URISyntaxException sendRequest throws this exception
      */
-    private boolean ValidateCSV(File file) throws IOException {
-        FileReader reader = new FileReader(file);
-        BufferedReader in_stream = new BufferedReader(reader);
-        Pattern analysis_regex = Pattern.compile("\\[(.+)\\]");
-        Pattern geneset_regex = Pattern.compile("\\((.+)\\)");
-        String line = null;
+    boolean performRequest(List<String> all_genes) throws IOException, URISyntaxException {
+        StringJoiner genes = new StringJoiner("\n");
 
-        if((line = in_stream.readLine()) != null) {
-            //check to make sure the first line is an analysis name e.g [analysisname]
-            if (!analysis_regex.matcher(line).find()) return false;
-
-            do {
-                if (line.length() > MAX_GENE_LENGTH) return false;
-
-                if (analysis_regex.matcher(line).find()) {
-                    if ((line = in_stream.readLine()) != null) {
-                        if (line.length() > MAX_GENE_LENGTH) return false;
-                        //if an analysis name was parsed and a geneset exists ensure it's the very next line
-                        if (!geneset_regex.matcher(line).find()) return false;
-                    }
-                }
-            } while ((line = in_stream.readLine()) != null);
-        }
-
-        return true;
-    }
-
-    /**
-     * @param all_genes
-     *  description: List of genes used to send request
-     * @return boolean
-     * @throws IOException
-     *  description: Thrown by performRequest
-     * @throws URISyntaxException
-     *  description: Thrown by performRequest
-     */
-    boolean SendEnrichrRequest(List<String> all_genes) throws IOException, URISyntaxException {
         //Add genes for enrichr request
         for (String gene : all_genes)
             genes.add(gene);
 
         String prepared_genes = genes.toString();
 
-        return performRequest(enrichr_url, prepared_genes, analyses.getCurrentAnalysisName());
-    }
-
-    /**
-     * @param URL
-     *  description: URL used to send request
-     * @param gene_list
-     *  description: return delimited string of genes used for request
-     * @param description
-     *  description: Analysis name, Enricher will display the analysis name as the Description in the header
-     * @return boolean
-     * @throws IOException
-     *  description: sendRequest throws this exception
-     * @throws URISyntaxException
-     *  description: sendRequest throws this exception
-     */
-    private boolean performRequest(String URL, String gene_list, String description) throws IOException, URISyntaxException {
-        HttpPost post_request = new HttpPost(URL);
+        HttpPost post_request = new HttpPost(enrichr_url);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.addTextBody("list", gene_list);
-        builder.addTextBody("description", description);
+        builder.addTextBody("list", prepared_genes);
+        builder.addTextBody("description", analyses.getCurrentAnalysisName());
 
         //build multipart/form-data type for request
         HttpEntity multipart = builder.build();
@@ -229,13 +203,10 @@ class GSEAManager {
     }
 
     /**
-     * @param post_request
-     *  description: HttpPost object used for sending request
+     * @param post_request HttpPost object used for sending request
      * @return boolean
-     * @throws IOException
-     *  description: httpClient, EntityUtils and CheckURL throws this exception
-     * @throws URISyntaxException
-     *  description: creating a new URL throws this exception
+     * @throws IOException httpClient, EntityUtils and checkURL throws this exception
+     * @throws URISyntaxException creating a new URL throws this exception
      */
     private boolean sendRequest(HttpPost post_request) throws IOException, URISyntaxException {
         int retval;
@@ -257,7 +228,7 @@ class GSEAManager {
         //Prepare URL
         new_url = new_url.concat(shortId);
 
-        if((retval = CheckURL(new_url)) < 0) {
+        if((retval = checkURL(new_url)) < 0) {
             if (retval == -1) new DisplayMessage("Error", "Invalid URL: " + new_url);
             else if (retval == -2) new DisplayMessage("Error", "Cannot reach: " + new_url);
 
@@ -270,13 +241,11 @@ class GSEAManager {
     }
 
     /**
-     * @param url_string
-     *  description: Name of the url to test
+     * @param url_string Name of the url to test
      * @return integer
-     * @throws IOException
-     *  description: If the url_string is malformed, an exception will be raised
+     * @throws IOException If the url_string is malformed, an exception will be raised
      */
-    private int CheckURL(String url_string) throws IOException {
+    private int checkURL(String url_string) throws IOException {
         final URL url = new URL(url_string);
         final String url_regex_pattern = "\\b(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
         int responseCode = 0;

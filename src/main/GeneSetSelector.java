@@ -166,15 +166,15 @@ public class GeneSetSelector {
         con_main.anchor = GridBagConstraints.LAST_LINE_END;
         p_main.add(p_select_cancel, con_main);
 
-        PopulatePanels();
-        SetupListeners();
+        populateLists();
+        setupListeners();
 
         d_main.add(p_main);
         d_main.pack();
         d_main.setVisible(true);
     }
 
-    private void PopulatePanels() {
+    private void populateLists() {
         boolean selected;
 
         for(Pair<String, java.util.List<String>> geneset : analyses.getAllGeneSets()) {
@@ -194,9 +194,9 @@ public class GeneSetSelector {
         }
     }
 
-    private void SetupListeners() {
+    private void setupListeners() {
         b_select.addActionListener(e -> {
-            SettingsWindow.UpdateSelectedGeneSets(selected_genesets);
+            SettingsWindow.updateSelectedGeneSets(selected_genesets);
             d_main.dispose();
         });
         b_cancel.addActionListener(e -> d_main.dispose());
