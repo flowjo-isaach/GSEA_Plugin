@@ -359,12 +359,12 @@ public class SettingsWindow extends JPanel implements ActionListener {
                 }
             }
             try {
-                gsea_man.SendEnrichrRequest(all_genes);
-            } catch (URLException | URISyntaxException e1) {
-                new DisplayMessage("Error", e1.getMessage());
-            } catch (IOException e1) {
+                if(!gsea_man.SendEnrichrRequest(all_genes))
+                    new DisplayMessage("Error", "Failed to send Request");
+            } catch (IOException | URISyntaxException e1) {
                 e1.printStackTrace();
             }
+
         });
     }
 

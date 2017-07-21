@@ -5,7 +5,7 @@ import javax.swing.*;
 /**
  * Created by Isaac on 7/3/2017.
  */
-public class DisplayMessage {
+class DisplayMessage {
 
     private String[] options = {"Continue", "Cancel"};
     private int response = -1;
@@ -16,12 +16,19 @@ public class DisplayMessage {
 
         type = type.toLowerCase();
 
-        if(type.equals("error"))
-            JOptionPane.showMessageDialog(panel, message, "Error", JOptionPane.ERROR_MESSAGE);
-        else if(type.equals("disclaimer"))
-            JOptionPane.showMessageDialog(panel, message, "Disclaimer", JOptionPane.INFORMATION_MESSAGE);
-        else
-            response = JOptionPane.showOptionDialog(frame, message, "Prompt", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+        switch (type) {
+            case "error":
+                JOptionPane.showMessageDialog(panel, message, "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "disclaimer":
+                JOptionPane.showMessageDialog(panel, message, "Disclaimer", JOptionPane.INFORMATION_MESSAGE);
+                break;
+            case "Prompt":
+                response = JOptionPane.showOptionDialog(frame, message, "Prompt", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+                break;
+            default:
+                break;
+        }
     }
 
     int getResponse() {return response;}

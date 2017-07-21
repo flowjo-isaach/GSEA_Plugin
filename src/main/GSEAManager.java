@@ -1,35 +1,78 @@
 package main;
 
+import java.awt.*;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import com.google.gson.Gson;
 import javafx.util.Pair;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
 class GSEAManager {
     private Analyses analyses;
+    private StringJoiner genes;
     private final static int MAX_GENE_LENGTH = 64;
+    final private static int GOOD_RESPONSE = 200;
+    private static CloseableHttpClient httpClient = HttpClients.createDefault();
 
-    GSEAManager(Analyses analyses) { this.analyses = analyses; }
+    private final static String enrichr_url = "http://amp.pharm.mssm.edu/Enrichr/addList";
+    private static String resulting_url = "http://amp.pharm.mssm.edu/Enrichr/enrich?dataset=";
 
-    void SendEnrichrRequest(List<String> all_genes) throws IOException, URLException, URISyntaxException {
-        Enricher_Request enricher = new Enricher_Request();
-
-        //Add genes for enrichr request
-        for (String gene : all_genes)
-            enricher.add_gene(gene);
-
-        HttpPost request = enricher.prepare_request(analyses.getCurrentAnalysisName());
-
-        if (request != null)
-            enricher.send_request(request);
+    /**
+     * @param analyses
+     *  description: Analyses object used for storing every analysis and their gene sets including their genes
+     */
+    GSEAManager(Analyses analyses) {
+        this.analyses = analyses;
+        this.genes = new StringJoiner("\n");
     }
 
+    /**
+     * @param filename
+     *  description: name of file the user would like to save
+     * @throws IOException
+     *  description: Thrown from FileWriter
+     */
+    void SaveCSV(String filename) throws IOException {
+        FileWriter writer = null;
+
+        writer = new FileWriter("./plugins/GSEA/" + filename + ".csv");
+        for (AnalysisMember analysis : analyses.getAnalyses()) {
+            writer.append("[" + analysis.getAnalysisName() + "]\n");
+            if(analysis.hasGeneSet()) {
+                for (Pair geneset : analysis.getGeneSets()) {
+                    writer.append("(" + geneset.getKey() + ")\n");
+                    for (String gene : (List<String>) geneset.getValue())
+                        writer.append(gene.concat("\n"));
+                }
+            }
+        }
+
+        writer.flush();
+        writer.close();
+    }
+
+    /**
+     * @return boolean
+     * @throws IOException
+     *  Thrown from ValidateCSV and PopulationAnalyses
+     */
     boolean LoadCSV() throws IOException {
         JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV files", "csv");
@@ -50,6 +93,12 @@ class GSEAManager {
         return false;
     }
 
+    /**
+     * @param file
+     *  description: CSV file used for loading previous session
+     * @throws IOException
+     *  description: thrown from BufferedReader
+     */
     private void PopulateAnalyses(File file) throws IOException {
         FileReader reader = new FileReader(file);
         BufferedReader in_stream = new BufferedReader(reader);
@@ -76,13 +125,13 @@ class GSEAManager {
                 line = line.replaceAll("[\\[\\]]", "");
                 analysis.setAnalysisName(line);
 
-            //else if a gene set is read e.g. (geneset), store the previous gene set before adding the next one
+                //else if a gene set is read e.g. (geneset), store the previous gene set before adding the next one
             } else if (geneset_regex.matcher(line).find()) {
                 if (analysis != null && gene_list != null)
                     analysis.addGeneSet(new Pair<>(geneset_name, gene_list));
                 gene_list = new ArrayList<>();
                 geneset_name = line.replaceAll("[\\(\\)]", "");
-            //else add a gene to its gene set
+                //else add a gene to its gene set
             } else {
                 if(analysis != null && gene_list != null)
                     gene_list.add(line);
@@ -100,25 +149,13 @@ class GSEAManager {
         reader.close();
     }
 
-    void SaveCSV(String filename) throws IOException {
-        FileWriter writer = null;
-
-        writer = new FileWriter("./plugins/GSEA/" + filename + ".csv");
-        for (AnalysisMember analysis : analyses.getAnalyses()) {
-            writer.append("[" + analysis.getAnalysisName() + "]\n");
-            if(analysis.hasGeneSet()) {
-                for (Pair geneset : analysis.getGeneSets()) {
-                    writer.append("(" + geneset.getKey() + ")\n");
-                    for (String gene : (List<String>) geneset.getValue())
-                        writer.append(gene.concat("\n"));
-                }
-            }
-        }
-
-        writer.flush();
-        writer.close();
-    }
-
+    /**
+     * @param file
+     *  description: CSV file used for loading previous session
+     * @return boolean
+     * @throws IOException
+     *  description: thrown by FileReader and BufferedReader
+     */
     private boolean ValidateCSV(File file) throws IOException {
         FileReader reader = new FileReader(file);
         BufferedReader in_stream = new BufferedReader(reader);
@@ -145,4 +182,125 @@ class GSEAManager {
 
         return true;
     }
+
+    /**
+     * @param all_genes
+     *  description: List of genes used to send request
+     * @return boolean
+     * @throws IOException
+     *  description: Thrown by performRequest
+     * @throws URISyntaxException
+     *  description: Thrown by performRequest
+     */
+    boolean SendEnrichrRequest(List<String> all_genes) throws IOException, URISyntaxException {
+        //Add genes for enrichr request
+        for (String gene : all_genes)
+            genes.add(gene);
+
+        String prepared_genes = genes.toString();
+
+        return performRequest(enrichr_url, prepared_genes, analyses.getCurrentAnalysisName());
+    }
+
+    /**
+     * @param URL
+     *  description: URL used to send request
+     * @param gene_list
+     *  description: return delimited string of genes used for request
+     * @param description
+     *  description: Analysis name, Enricher will display the analysis name as the Description in the header
+     * @return boolean
+     * @throws IOException
+     *  description: sendRequest throws this exception
+     * @throws URISyntaxException
+     *  description: sendRequest throws this exception
+     */
+    private boolean performRequest(String URL, String gene_list, String description) throws IOException, URISyntaxException {
+        HttpPost post_request = new HttpPost(URL);
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addTextBody("list", gene_list);
+        builder.addTextBody("description", description);
+
+        //build multipart/form-data type for request
+        HttpEntity multipart = builder.build();
+        post_request.setEntity(multipart);
+
+        return sendRequest(post_request);
+    }
+
+    /**
+     * @param post_request
+     *  description: HttpPost object used for sending request
+     * @return boolean
+     * @throws IOException
+     *  description: httpClient, EntityUtils and CheckURL throws this exception
+     * @throws URISyntaxException
+     *  description: creating a new URL throws this exception
+     */
+    private boolean sendRequest(HttpPost post_request) throws IOException, URISyntaxException {
+        int retval;
+        String new_url = resulting_url;
+        //send request to ENRICHR
+        CloseableHttpResponse response = httpClient.execute(post_request);
+
+        if (response == null) return false;
+
+        HttpEntity responseEntity = response.getEntity();
+        String responseString = EntityUtils.toString(responseEntity);
+
+        //parse JSON response to JSON object
+        JSONResponse json_response = new Gson().fromJson(responseString, JSONResponse.class);
+
+        //retrieve parameter needed to build URL from shortId
+        String shortId = json_response.getshortId();
+
+        //Prepare URL
+        new_url = new_url.concat(shortId);
+
+        if((retval = CheckURL(new_url)) < 0) {
+            if (retval == -1) new DisplayMessage("Error", "Invalid URL: " + new_url);
+            else if (retval == -2) new DisplayMessage("Error", "Cannot reach: " + new_url);
+
+            return false;
+        }
+        //Send user to prepared URL using their default browser
+        Desktop.getDesktop().browse(new URL(new_url).toURI());
+
+        return true;
+    }
+
+    /**
+     * @param url_string
+     *  description: Name of the url to test
+     * @return integer
+     * @throws IOException
+     *  description: If the url_string is malformed, an exception will be raised
+     */
+    private int CheckURL(String url_string) throws IOException {
+        final URL url = new URL(url_string);
+        final String url_regex_pattern = "\\b(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        int responseCode = 0;
+
+        //Check URL against regular expression
+        Pattern url_regex = Pattern.compile(url_regex_pattern);
+        Matcher match = url_regex.matcher(url_string);
+
+        //ensure URL responds
+        HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+        huc.setRequestMethod("HEAD");
+        responseCode = huc.getResponseCode();
+
+        if (!match.find()) return -1;
+            //GOOD_RESPONSE code = 200
+        else if (responseCode != GOOD_RESPONSE) return -2;
+
+        return 0;
+    }
+}
+
+class JSONResponse {
+    private String shortId;
+    private String userListId;
+    String getshortId() { return shortId; }
+    String getUserListId() { return userListId; }
 }
