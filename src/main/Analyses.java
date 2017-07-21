@@ -1,16 +1,16 @@
 package main;
 
-import com.flowjo.lib.parameters.ParameterSetInterface;
-
-import javafx.util.Pair;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javafx.util.Pair;
+
+import com.flowjo.lib.parameters.ParameterSetInterface;
 
 /**
  * Created by Isaac on 7/11/2017.
  */
-public class Analyses {
+class Analyses {
     private static Analyses singleton = null;
     private static List<AnalysisMember> analyses;
     private static List<Pair<String, List<String>>> all_gene_sets;
@@ -34,13 +34,7 @@ public class Analyses {
     List<AnalysisMember> getAnalyses() {return analyses;}
     AnalysisMember getCurrentAnalysis() {return current_analysis;}
     List<Pair<String, List<String>>> getAllGeneSets() {return all_gene_sets;}
-
-    String getCurrentAnalysisName() {
-        if(current_analysis != null)
-            return current_analysis.getAnalysisName();
-
-        return null;
-    }
+    String getCurrentAnalysisName() {return (current_analysis != null) ? current_analysis.getAnalysisName() : null;}
 
     void addAnalysis(AnalysisMember member) {
         analyses.add(member);
