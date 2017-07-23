@@ -1,5 +1,0 @@
-backlog:
-
-adding analysis name that currently exists doesnt throw error
-
-when GSEA folder doesn't exist, it defaults to Documents...
