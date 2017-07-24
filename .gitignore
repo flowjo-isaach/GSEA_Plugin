@@ -30,3 +30,7 @@ hs_err_pid*
 backlog.txt
 
 /plugins/GSEA/*
+.classpath
+.project
+release.properties
+FlowJo_GSEA_Plugin.iml
