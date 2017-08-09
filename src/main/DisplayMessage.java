@@ -2,34 +2,46 @@ package main;
 
 import javax.swing.*;
 
-/**
- * Created by Isaac on 7/3/2017.
- */
+/***********************************************************************************************************************
+ * Author: Isaac Harries
+ * Date: 07/03/2017
+ * Contact: isaach@flowjo.com
+ * Description: Displays an error, disclaimer or prompt window based on the given parameters.
+ **********************************************************************************************************************/
 class DisplayMessage {
-
-    private String[] options = {"Continue", "Cancel"};
     private int response = -1;
 
+    /**
+     * Method: Constructor
+     * Description: Displays a message
+     * @param type type of message (either 'error', 'disclaimer', or 'prompt'
+     * @param message message to display
+     */
     DisplayMessage(String type, String message) {
         JFrame frame = new JFrame();
-        JPanel panel = new JPanel();
+        String[] options = {"Continue", "Cancel"};
 
         type = type.toLowerCase();
 
         switch (type) {
             case "error":
-                JOptionPane.showMessageDialog(panel, message, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(frame, message, "Error", JOptionPane.ERROR_MESSAGE);
                 break;
             case "disclaimer":
-                JOptionPane.showMessageDialog(panel, message, "Disclaimer", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(frame, message, null, JOptionPane.INFORMATION_MESSAGE);
                 break;
             case "Prompt":
-                response = JOptionPane.showOptionDialog(frame, message, "Prompt", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+                response = JOptionPane.showOptionDialog(frame, message, null, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
                 break;
             default:
                 break;
         }
     }
 
+    /**
+     * Method: getResponse
+     * Description: Returns the type of response if user was given a Prompt
+     * @return response Integer value e.g. JOptionPane.OK_OPTION, JOptionPane.NO_OPTION
+     */
     int getResponse() {return response;}
 }

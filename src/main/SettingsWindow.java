@@ -17,9 +17,14 @@ import org.apache.commons.io.FilenameUtils;
 
 import com.flowjo.lib.parameters.*;
 
-/**
- * Created by Isaac on 6/29/2017.
- */
+/***********************************************************************************************************************
+ * Author: Isaac Harries
+ * Date: 06/29/2017
+ * Contact: isaach@flowjo.com
+ * Description: Displays the main window when selecting the GSEA plugin in SeqGeq. The Java library used for the GUI is
+ * Swing. In this menu, the user can manage all analyses they have created. If the user would like to submit their
+ * analysis data (gene sets) to Enrichr, they can click the Submit button.
+ **********************************************************************************************************************/
 public class SettingsWindow extends JPanel implements ActionListener {
 
     private static SortedListModel listModel = new SortedListModel();
@@ -45,6 +50,16 @@ public class SettingsWindow extends JPanel implements ActionListener {
     private static JButton b_close;
     private static GridBagConstraints cons_main;
 
+    /**
+     * Method: Constructor
+     * Description: The Swing layout type for this plugin is called GridBagLayout. This layout was chosen because it'
+     * easy to create GUIs programmatically. This layout uses grid coordinates to place elements
+     * (e.g labels, buttons, combo-boxes). Each element uses a GridBagConstraints variable to specify the location,
+     * padding, weights etc. Each element can use the same GridBagConstraints variable, but may introduce unwanted
+     * behavior if done incorrectly. Review the following guide if you're more interested in this layout:
+     * https://docs.oracle.com/javase/tutorial/uiswing/layout/gridbag.html
+     * @param all_genes All gene sets
+     */
     SettingsWindow(Collection<ParameterSetInterface> all_genes) {
         analyses = Analyses.getInstance(all_genes);
         gsea_man = new GSEAManager(analyses);
@@ -156,6 +171,12 @@ public class SettingsWindow extends JPanel implements ActionListener {
         d_main.setVisible(true);
     }
 
+    /**
+     * Method: modifyCurrentItem
+     * Description: Gets called when a user modifies a list item in the combo-box. The analysis name gets validated before
+     * any action is carried out. An error message will display if it's invalid.
+     * @return true if modification succeeds
+     */
     private boolean modifyCurrentItem() {
         String new_analysis_name = (String) c_analysisList.getEditor().getItem();
 
@@ -178,6 +199,11 @@ public class SettingsWindow extends JPanel implements ActionListener {
         return false;
     }
 
+    /**
+     * Method: renameCurrentItem
+     * Description: Called from ModifyCurrentItem() if the analysis name needs to be renamed.
+     * @param new_analysis_name new name for the current analysis
+     */
     private void renameCurrentItem(String new_analysis_name) {
         int count = 0;
 
@@ -195,6 +221,11 @@ public class SettingsWindow extends JPanel implements ActionListener {
         }
     }
 
+    /**
+     * Method: addCurrentItem
+     * Description: Called from ModifyCurrentItem() if the analysis name needs to be added.
+     * @param new_analysis_name name of analysis to add
+     */
     private void addCurrentItem(String new_analysis_name) {
         AnalysisMember member = new AnalysisMember();
         member.setAnalysisName(new_analysis_name);
@@ -203,6 +234,14 @@ public class SettingsWindow extends JPanel implements ActionListener {
         c_analysisList.setEditable(false);
     }
 
+    /**
+     * Method: validateAnalysisName
+     * Description: Returns true if analysis name is valid. Specifically, the analysis name cannot be blank, be less
+     * than 256 characters, or have the same name as the last combo-box item: Add Item... The name must contain
+     * valid ASCII characters to ensure proper saving/loading behavior.
+     * @param name name of analysis to validate
+     * @return true if name is valid
+     */
     private boolean validateAnalysisName(String name) {
         //Ensure field is not empty
         if (name != null && !name.isEmpty())
@@ -215,6 +254,11 @@ public class SettingsWindow extends JPanel implements ActionListener {
         return false;
     }
 
+    /**
+     * Method: updateComboList
+     * Description: Updates the combo-list after the main window has loaded or the user has chosen to load data from
+     * a previous session.
+     */
     private void updateComboList() {
         c_analysisList.removeAllItems();
         c_analysisList.addItem("Add Item...");
@@ -230,6 +274,10 @@ public class SettingsWindow extends JPanel implements ActionListener {
         c_analysisList.setSelectedIndex(0);
     }
 
+    /**
+     * Method: setupListeners
+     * Description: Sets up all the Event listeners for most GUI elements in the main window.
+     */
     private void setupListeners() {
         c_analysisList.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
             @Override
@@ -370,6 +418,12 @@ public class SettingsWindow extends JPanel implements ActionListener {
         });
     }
 
+    /**
+     * Method: updateSelectedGeneSets
+     * Description: Called from the Gene Set Selector window when the genes have been selected. This method updates the
+     * gene list in the main window and adds the analysis member and its gene sets to the analyses object.
+     * @param list
+     */
     static void updateSelectedGeneSets(JList <String> list) {
         AnalysisMember member = analyses.getCurrentAnalysis();
         List<Pair<String, List<String>>> all_genesets = analyses.getAllGeneSets();

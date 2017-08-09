@@ -25,6 +25,13 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
+/***********************************************************************************************************************
+ * Author: Isaac Harries
+ * Date: 07/03/2017
+ * Contact: isaach@flowjo.com
+ * Description: This class includes all methods needed to load/save sessions via CSV files, and submitting data to
+ * Enrichr via their API.
+ **********************************************************************************************************************/
 class GSEAManager {
     private Analyses analyses;
 
@@ -34,14 +41,18 @@ class GSEAManager {
 
     private final static String enrichr_url = "http://amp.pharm.mssm.edu/Enrichr/addList";
     private static String resulting_url = "http://amp.pharm.mssm.edu/Enrichr/enrich?dataset=";
-
+    private static CloseableHttpResponse response;
     /**
+     * Method: Constructor
+     * Description: Copies a reference to the analyses object in the class locally.
      * @param analyses Analyses object used for storing every analysis
      *                 and their gene sets including their genes
      */
     GSEAManager(Analyses analyses) { this.analyses = analyses; }
 
     /**
+     * Method: saveCSV
+     * Description: Copies over all analyses data to a return delimited CSV file.
      * @param filename name of file the user would like to save
      * @throws IOException Thrown from FileWriter
      */
@@ -65,6 +76,10 @@ class GSEAManager {
     }
 
     /**
+     * Method: loadCSV
+     * Description: Prompts user to select a CSV file within a file browser. Once selected, the file will be validated
+     * using the ValidateCSV() method before handing it off to the PopulateAnalyses() method, where the analyses object
+     * will be repopulated with the new data.
      * @return boolean
      * @throws IOException Thrown from validateCSV and PopulationAnalyses
      */
@@ -89,6 +104,8 @@ class GSEAManager {
     }
 
     /**
+     * Method: validateCSV
+     * Description: Ensures the CSV file chosen is valid. If not, it will return false and display an error message.
      * @param file CSV file used for loading previous session
      * @return boolean
      * @throws IOException thrown by FileReader and BufferedReader
@@ -122,8 +139,10 @@ class GSEAManager {
     }
 
     /**
+     * Method: populateAnalyses
+     * Description: After validation, the analyses object will be repopulated with the new data.
      * @param file CSV file used for loading previous session
-     * @throws IOException description: thrown from BufferedReader
+     * @throws IOException thrown from BufferedReader
      */
     private void populateAnalyses(File file) throws IOException {
         FileReader reader = new FileReader(file);
@@ -176,6 +195,10 @@ class GSEAManager {
     }
 
     /**
+     * Method: performRequest
+     * Description: Prepares an Enrichr request by adding all genes into a single string, builds a multipart
+     * form-data object with the gene list and description for request. The HttpPost object is then sent to the
+     * sendRequest() method to finish the request.
      * @param all_genes List of genes for Enrichr request
      * @return boolean
      * @throws IOException sendRequest throws this exception
@@ -203,6 +226,10 @@ class GSEAManager {
     }
 
     /**
+     * Method: sendRequest
+     * Description: Builds a GSON(Google's version of JSON) object with the response from Enrichr. The one value we
+     * want from the response is the shortId. This id will append to a prepared URL, then forward the user over to
+     * the Enrichr website with their results.
      * @param post_request HttpPost object used for sending request
      * @return boolean
      * @throws IOException httpClient, EntityUtils and checkURL throws this exception
@@ -212,9 +239,13 @@ class GSEAManager {
         int retval;
         String new_url = resulting_url;
         //send request to ENRICHR
-        CloseableHttpResponse response = httpClient.execute(post_request);
 
-        if (response == null) return false;
+        waitMessage(post_request);
+
+        if (response == null) {
+            new DisplayMessage("error", "Enrichr did not respond");
+            return false;
+        }
 
         HttpEntity responseEntity = response.getEntity();
         String responseString = EntityUtils.toString(responseEntity);
@@ -241,6 +272,11 @@ class GSEAManager {
     }
 
     /**
+     * Method: checkURL
+     * Description: Check a given URL for two things. One is the URL passed to it is a valid URL. Two is it checks
+     * for a response code 200. Any other response code will be treated as a failure to respond. If the URL is
+     * invalid, an error code of -1 will be returned. If their is no response from the URL, an error code of -2
+     * will be returned.
      * @param url_string Name of the url to test
      * @return integer
      * @throws IOException If the url_string is malformed, an exception will be raised
@@ -265,8 +301,42 @@ class GSEAManager {
 
         return 0;
     }
+
+    /**
+     * Method: waitMessage
+     * Description: Displays a waiting message until Enrichr responds
+     * @param post_request post object
+     */
+    private void waitMessage(HttpPost post_request) {
+        JFrame frame = new JFrame();
+
+        //creates a background thread. Needed for displaying a wait message until Enrichr responds
+        SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() throws InterruptedException, IOException {
+                response = httpClient.execute(post_request);
+                return "true";
+            }
+
+            @Override
+            protected void done() { frame.dispose(); }
+        };
+        worker.execute();
+        JOptionPane.showMessageDialog(frame, "Waiting for Enrichr Response. This may take a few minutes",
+                                      null, JOptionPane.INFORMATION_MESSAGE);
+        try {
+            worker.get();
+        } catch (Exception e1) {
+            e1.printStackTrace();
+        }
+    }
 }
 
+/**
+ * Description: Used for Gson. Gson().fromJson() populates an object with the json response. Each key for every
+ * key value pair within the json object must have an associated string variable with the same name. After fromJson()
+ * executes, all strings will be populated with its associated value.
+ */
 class JSONResponse {
     private String shortId;
     private String userListId;

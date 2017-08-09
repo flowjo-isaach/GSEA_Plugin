@@ -5,10 +5,15 @@ import javafx.util.Pair;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Created by Isaac on 7/11/2017.
- */
-public class GeneSetSelector {
+/***********************************************************************************************************************
+ * Author: Isaac Harries
+ * Date: 07/11/2017
+ * Contact: isaach@flowjo.com
+ * Description: Displays the Gene Set Selector window when the user clicks on the Select Gene Sets button. The Java
+ * library used for the GUI is also Swing. In this menu, the user can move the gene sets from the left, over to the
+ * right. Once they are finished, they can click the Select button which will return them back to the main window.
+ **********************************************************************************************************************/
+class GeneSetSelector {
     private static SortedListModel list_selected_sets;
     private static SortedListModel list_all_sets;
     private static JList<String> selected_genesets;
@@ -36,6 +41,11 @@ public class GeneSetSelector {
     private static JButton b_select;
     private static JButton b_cancel;
 
+    /**
+     * Method: Constructor
+     * Description: Displays the Gene Set Selector window.
+     * @param analyses This window needs analyses data to display gene sets so pass it an analyses object
+     */
     GeneSetSelector(Analyses analyses) {
         this.analyses = analyses;
         f_main = new JFrame();
@@ -174,6 +184,11 @@ public class GeneSetSelector {
         d_main.setVisible(true);
     }
 
+    /**
+     * Method: populateLists
+     * Description: After initializing the GUI, this method will get called to populate the gene lists within the
+     * Gene Set Select window.
+     */
     private void populateLists() {
         boolean selected;
 
@@ -194,6 +209,10 @@ public class GeneSetSelector {
         }
     }
 
+    /**
+     * Method: setupListeners
+     * Description: Sets up all the Event listeners for most GUI elements in the Gene Set Selector menu.
+     */
     private void setupListeners() {
         b_select.addActionListener(e -> {
             SettingsWindow.updateSelectedGeneSets(selected_genesets);
